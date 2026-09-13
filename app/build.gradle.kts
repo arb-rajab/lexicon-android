@@ -113,4 +113,3 @@ ktlint {
     android.set(true)
     version.set("1.3.1")
 }
-
