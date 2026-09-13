@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.IOException
 
-class FakeConnectivityObserver(initial: ConnectivityState) : ConnectivityObserver {
+class FakeConnectivityObserver(
+    initial: ConnectivityState,
+) : ConnectivityObserver {
     val state = MutableStateFlow(initial)
 
     override fun observe(): StateFlow<ConnectivityState> = state
@@ -39,16 +41,16 @@ class FakeLexiconApi(
 
     override suspend fun listCorpora(): List<CorpusDto> = corpora
 
-    override suspend fun createCorpus(request: CorpusCreateRequest): CorpusDto =
-        error("not used in these tests")
+    override suspend fun createCorpus(request: CorpusCreateRequest): CorpusDto = error("not used in these tests")
 
-    override suspend fun getCorpus(corpusId: String): CorpusDetailDto =
-        corpusDetails.getValue(corpusId)
+    override suspend fun getCorpus(corpusId: String): CorpusDetailDto = corpusDetails.getValue(corpusId)
 
-    override suspend fun listDocuments(corpusId: String): List<DocumentDto> =
-        documents[corpusId].orEmpty()
+    override suspend fun listDocuments(corpusId: String): List<DocumentDto> = documents[corpusId].orEmpty()
 
-    override suspend fun askQuestion(corpusId: String, request: QueryRequestDto): QueryResponseDto {
+    override suspend fun askQuestion(
+        corpusId: String,
+        request: QueryRequestDto,
+    ): QueryResponseDto {
         askQuestionCallCount++
         if (askQuestionShouldFail) throw IOException("simulated network failure")
         return askQuestionResult(corpusId, request.question)

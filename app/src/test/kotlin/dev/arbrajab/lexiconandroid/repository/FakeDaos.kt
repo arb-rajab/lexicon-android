@@ -72,7 +72,10 @@ class FakeQueryResultDao : QueryResultDao {
     override suspend fun getUnsyncedForCorpus(corpusId: String): List<QueryResultEntity> =
         flowFor(corpusId).value.filter { it.syncState != QuerySyncState.SYNCED }
 
-    override suspend fun markStaleWhereFingerprintDiffers(corpusId: String, currentFingerprint: String) {
+    override suspend fun markStaleWhereFingerprintDiffers(
+        corpusId: String,
+        currentFingerprint: String,
+    ) {
         flowFor(corpusId).value =
             flowFor(corpusId).value.map {
                 if (it.syncState == QuerySyncState.SYNCED && it.corpusFingerprint != currentFingerprint) {
