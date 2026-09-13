@@ -1,5 +1,6 @@
 package dev.arbrajab.lexiconandroid.di
 
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dev.arbrajab.lexiconandroid.data.ServerConfig
 import dev.arbrajab.lexiconandroid.data.remote.LexiconApi
 import java.util.concurrent.TimeUnit
@@ -10,7 +11,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 /** Attaches the user-configured static auth header, if any (see ServerConfigStore). */
 private class StaticHeaderInterceptor(private val configProvider: () -> ServerConfig) :
