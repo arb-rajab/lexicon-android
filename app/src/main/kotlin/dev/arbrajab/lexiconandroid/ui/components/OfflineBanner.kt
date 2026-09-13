@@ -21,7 +21,7 @@ import dev.arbrajab.lexiconandroid.connectivity.ConnectivityState
 fun ConnectivityBanner(
     connectivityState: ConnectivityState,
     pendingCount: Int,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val visible = connectivityState == ConnectivityState.OFFLINE || pendingCount > 0
     AnimatedVisibility(visible = visible, modifier = modifier) {
@@ -39,10 +39,10 @@ fun ConnectivityBanner(
             }
         Row(
             modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .background(background)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            Modifier
+                .fillMaxWidth()
+                .background(background)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Text(text = label, style = MaterialTheme.typography.labelMedium)
         }

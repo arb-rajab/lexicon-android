@@ -31,11 +31,14 @@ fun QueryScreen(viewModel: QueryViewModel, corpusName: String, onBack: () -> Uni
 
     Scaffold(topBar = { TopAppBar(title = { Text(corpusName) }) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            ConnectivityBanner(connectivityState = state.connectivity, pendingCount = state.pendingCount)
+            ConnectivityBanner(
+                connectivityState = state.connectivity,
+                pendingCount = state.pendingCount
+            )
             Text(
                 "${state.documents.size} document(s) cached locally",
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
             LazyColumn(modifier = Modifier.weight(1f, fill = true).fillMaxWidth()) {
                 items(state.results, key = { it.id }) { result -> QueryResultCard(result) }
@@ -45,12 +48,12 @@ fun QueryScreen(viewModel: QueryViewModel, corpusName: String, onBack: () -> Uni
                     value = state.questionInput,
                     onValueChange = viewModel::onQuestionChanged,
                     label = { Text("Ask a question") },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f)
                 )
                 Button(
                     onClick = viewModel::submit,
                     enabled = !isSubmitting && state.questionInput.isNotBlank(),
-                    modifier = Modifier.padding(start = 8.dp),
+                    modifier = Modifier.padding(start = 8.dp)
                 ) {
                     if (isSubmitting) {
                         CircularProgressIndicator(modifier = Modifier.padding(4.dp))
@@ -73,27 +76,27 @@ private fun QueryResultCard(result: QueryResultEntity) {
                     Text(
                         "Queued — will answer when back online",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.tertiary,
+                        color = MaterialTheme.colorScheme.tertiary
                     )
                 QuerySyncState.FAILED ->
                     Text(
                         "Failed to sync — will retry automatically",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
+                        color = MaterialTheme.colorScheme.error
                     )
                 QuerySyncState.SYNCED -> {
                     if (result.possiblyStale) {
                         Text(
                             "This corpus changed since this answer was generated — may be outdated",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                     Text(
                         text = result.answerText
                             ?: refusalMessage(result.refusalReason),
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(top = 4.dp),
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
             }
@@ -101,10 +104,10 @@ private fun QueryResultCard(result: QueryResultEntity) {
     }
 }
 
-private fun refusalMessage(reason: String?): String =
-    when (reason) {
-        "self_refused" -> "The model declined to answer from the retrieved documents."
-        "verification_failed" -> "An answer was generated but failed citation verification, so it was withheld."
-        "no_candidates_retrieved" -> "No relevant documents were found for this question."
-        else -> "No answer available."
-    }
+private fun refusalMessage(reason: String?): String = when (reason) {
+    "self_refused" -> "The model declined to answer from the retrieved documents."
+    "verification_failed" ->
+        "An answer was generated but failed citation verification, so it was withheld."
+    "no_candidates_retrieved" -> "No relevant documents were found for this question."
+    else -> "No answer available."
+}

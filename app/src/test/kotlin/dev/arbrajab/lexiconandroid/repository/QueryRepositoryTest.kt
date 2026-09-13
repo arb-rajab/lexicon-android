@@ -42,31 +42,30 @@ class QueryRepositoryTest {
                 documentDao = documentDao,
                 connectivityObserver = connectivity,
                 apiProvider = { api },
-                onQueryQueued = { queuedCallbackFired = true },
+                onQueryQueued = { queuedCallbackFired = true }
             )
     }
 
     @Test
-    fun `submitQuery online caches an answered result as SYNCED`() =
-        runTest {
-            api.askQuestionResult = { _, _ ->
-                QueryResponseDto(
-                    queryLogId = "log-1",
-                    answered = true,
-                    answer = "Because of X.",
-                    citations = emptyList(),
-                    refusalReason = null,
-                    retrievedChunkCount = 2,
-                )
-            }
-
-            val outcome = repository.submitQuery(corpusId, "Why?")
-
-            check(outcome is SubmitQueryOutcome.Answered)
-            assertEquals(QuerySyncState.SYNCED, outcome.result.syncState)
-            assertEquals("Because of X.", outcome.result.answerText)
-            assertFalse(queuedCallbackFired)
+    fun `submitQuery online caches an answered result as SYNCED`() = runTest {
+        api.askQuestionResult = { _, _ ->
+            QueryResponseDto(
+                queryLogId = "log-1",
+                answered = true,
+                answer = "Because of X.",
+                citations = emptyList(),
+                refusalReason = null,
+                retrievedChunkCount = 2
+            )
         }
+
+        val outcome = repository.submitQuery(corpusId, "Why?")
+
+        check(outcome is SubmitQueryOutcome.Answered)
+        assertEquals(QuerySyncState.SYNCED, outcome.result.syncState)
+        assertEquals("Because of X.", outcome.result.answerText)
+        assertFalse(queuedCallbackFired)
+    }
 
     @Test
     fun `submitQuery while offline queues a PENDING placeholder and notifies the sync trigger`() =
@@ -96,59 +95,61 @@ class QueryRepositoryTest {
         }
 
     @Test
-    fun `replayPending on success answers the question and removes the pending entry`() =
-        runTest {
-            connectivity.state.value = ConnectivityState.OFFLINE
-            val queued = repository.submitQuery(corpusId, "Why?") as SubmitQueryOutcome.Queued
+    fun `replayPending on success answers the question and removes the pending entry`() = runTest {
+        connectivity.state.value = ConnectivityState.OFFLINE
+        val queued = repository.submitQuery(corpusId, "Why?") as SubmitQueryOutcome.Queued
 
-            api.askQuestionResult = { _, _ ->
-                QueryResponseDto(
-                    queryLogId = "log-2",
-                    answered = true,
-                    answer = "Resolved answer.",
-                    citations = emptyList(),
-                    refusalReason = null,
-                    retrievedChunkCount = 1,
-                )
-            }
-
-            val succeeded = repository.replayPending(queued.pending)
-
-            assertTrue(succeeded)
-            assertTrue(pendingQueryDao.getAll().isEmpty())
-            val cached = queryResultDao.observeForCorpus(corpusId).value
-            // The PENDING placeholder (keyed by localId) is replaced by the server-assigned row.
-            assertEquals(1, cached.size)
-            assertEquals(QuerySyncState.SYNCED, cached.first().syncState)
-            assertEquals("Resolved answer.", cached.first().answerText)
+        api.askQuestionResult = { _, _ ->
+            QueryResponseDto(
+                queryLogId = "log-2",
+                answered = true,
+                answer = "Resolved answer.",
+                citations = emptyList(),
+                refusalReason = null,
+                retrievedChunkCount = 1
+            )
         }
+
+        val succeeded = repository.replayPending(queued.pending)
+
+        assertTrue(succeeded)
+        assertTrue(pendingQueryDao.getAll().isEmpty())
+        val cached = queryResultDao.observeForCorpus(corpusId).value
+        // The PENDING placeholder (keyed by localId) is replaced by the server-assigned row.
+        assertEquals(1, cached.size)
+        assertEquals(QuerySyncState.SYNCED, cached.first().syncState)
+        assertEquals("Resolved answer.", cached.first().answerText)
+    }
 
     @Test
-    fun `replayPending on failure increments attempts and keeps the entry queued`() =
-        runTest {
-            connectivity.state.value = ConnectivityState.OFFLINE
-            val queued = repository.submitQuery(corpusId, "Why?") as SubmitQueryOutcome.Queued
-            api.askQuestionShouldFail = true
+    fun `replayPending on failure increments attempts and keeps the entry queued`() = runTest {
+        connectivity.state.value = ConnectivityState.OFFLINE
+        val queued = repository.submitQuery(corpusId, "Why?") as SubmitQueryOutcome.Queued
+        api.askQuestionShouldFail = true
 
-            val succeeded = repository.replayPending(queued.pending)
+        val succeeded = repository.replayPending(queued.pending)
 
-            assertFalse(succeeded)
-            val remaining = pendingQueryDao.getAll()
-            assertEquals(1, remaining.size)
-            assertEquals(1, remaining.first().attempts)
-        }
+        assertFalse(succeeded)
+        val remaining = pendingQueryDao.getAll()
+        assertEquals(1, remaining.size)
+        assertEquals(1, remaining.first().attempts)
+    }
 
     @Test
     fun `a cached synced result is marked possibly stale once the corpus fingerprint changes`() =
         runTest {
-            corpusDao.upsert(CorpusEntity(corpusId, "Corpus", "now", documentCount = 1, cachedAt = 0))
+            corpusDao.upsert(
+                CorpusEntity(corpusId, "Corpus", "now", documentCount = 1, cachedAt = 0)
+            )
             api.askQuestionResult = { _, _ ->
                 QueryResponseDto("log-3", true, "Answer.", emptyList(), null, 1)
             }
             repository.submitQuery(corpusId, "Why?")
 
             // Corpus grows a second document — the fingerprint (documentCount:maxVersion) changes.
-            corpusDao.upsert(CorpusEntity(corpusId, "Corpus", "now", documentCount = 2, cachedAt = 1))
+            corpusDao.upsert(
+                CorpusEntity(corpusId, "Corpus", "now", documentCount = 2, cachedAt = 1)
+            )
             queryResultDao.markStaleWhereFingerprintDiffers(corpusId, "2:0")
 
             val cached = queryResultDao.observeForCorpus(corpusId).value

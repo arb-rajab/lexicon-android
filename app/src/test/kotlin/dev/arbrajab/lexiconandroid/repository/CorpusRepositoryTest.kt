@@ -17,7 +17,7 @@ class CorpusRepositoryTest {
         val docs = listOf(doc(version = 1))
         assertNotEquals(
             computeCorpusFingerprint(1, docs),
-            computeCorpusFingerprint(2, docs),
+            computeCorpusFingerprint(2, docs)
         )
     }
 
@@ -33,43 +33,42 @@ class CorpusRepositoryTest {
         val docs = listOf(doc(version = 1), doc(id = "d2", version = 3))
         assertEquals(
             computeCorpusFingerprint(2, docs),
-            computeCorpusFingerprint(2, docs),
+            computeCorpusFingerprint(2, docs)
         )
     }
 
     @Test
-    fun `refresh caches corpora and documents and evaluates staleness`() =
-        runTest {
-            val corpusDao = FakeCorpusDao()
-            val documentDao = FakeDocumentDao()
-            val queryResultDao = FakeQueryResultDao()
-            val corpusId = "c1"
-            val document = DocumentDto("d1", "a.txt", version = 1, status = "ready", chunkCount = 5)
-            val api =
-                FakeLexiconApi(
-                    corpora = listOf(CorpusDto(corpusId, "Corpus 1", "now")),
-                    corpusDetails =
-                        mapOf(corpusId to CorpusDetailDto(corpusId, "Corpus 1", "now", documentCount = 1)),
-                    documents = mapOf(corpusId to listOf(document)),
-                )
-            val repository = CorpusRepository(corpusDao, documentDao, queryResultDao) { api }
+    fun `refresh caches corpora and documents and evaluates staleness`() = runTest {
+        val corpusDao = FakeCorpusDao()
+        val documentDao = FakeDocumentDao()
+        val queryResultDao = FakeQueryResultDao()
+        val corpusId = "c1"
+        val document = DocumentDto("d1", "a.txt", version = 1, status = "ready", chunkCount = 5)
+        val api =
+            FakeLexiconApi(
+                corpora = listOf(CorpusDto(corpusId, "Corpus 1", "now")),
+                corpusDetails =
+                mapOf(
+                    corpusId to
+                        CorpusDetailDto(corpusId, "Corpus 1", "now", documentCount = 1)
+                ),
+                documents = mapOf(corpusId to listOf(document))
+            )
+        val repository = CorpusRepository(corpusDao, documentDao, queryResultDao) { api }
 
-            repository.refresh()
+        repository.refresh()
 
-            assertEquals(1, corpusDao.observeAll().value.size)
-            assertEquals(1, documentDao.getForCorpus(corpusId).size)
-        }
+        assertEquals(1, corpusDao.observeAll().value.size)
+        assertEquals(1, documentDao.getForCorpus(corpusId).size)
+    }
 
-    private fun doc(
-        id: String = "d1",
-        version: Int,
-    ) = DocumentEntity(
+    private fun doc(id: String = "d1", version: Int) = DocumentEntity(
         id = id,
         corpusId = "c1",
         sourceFilename = "file.txt",
         version = version,
         status = "ready",
         chunkCount = 1,
-        cachedAt = 0,
+        cachedAt = 0
     )
 }

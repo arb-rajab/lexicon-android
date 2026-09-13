@@ -23,16 +23,18 @@ data class QueryScreenUiState(
     val connectivity: ConnectivityState = ConnectivityState.OFFLINE,
     val pendingCount: Int = 0,
     val questionInput: String = "",
-    val isSubmitting: Boolean = false,
+    val isSubmitting: Boolean = false
 )
 
 class QueryViewModel(
     private val corpusId: String,
     private val corpusRepository: CorpusRepository,
     private val queryRepository: QueryRepository,
-    private val connectivityObserver: ConnectivityObserver,
+    private val connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
     private val _questionInput = MutableStateFlow("")
+    val questionInput: StateFlow<String> = _questionInput.asStateFlow()
+
     private val _isSubmitting = MutableStateFlow(false)
     val isSubmitting: StateFlow<Boolean> = _isSubmitting.asStateFlow()
 
@@ -42,14 +44,14 @@ class QueryViewModel(
             queryRepository.observeResults(corpusId),
             connectivityObserver.observe(),
             queryRepository.observePendingCount(),
-            _questionInput,
+            _questionInput
         ) { documents, results, connectivity, pendingCount, question ->
             QueryScreenUiState(
                 documents = documents,
                 results = results,
                 connectivity = connectivity,
                 pendingCount = pendingCount,
-                questionInput = question,
+                questionInput = question
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), QueryScreenUiState())
 
@@ -75,7 +77,7 @@ class QueryViewModel(
         private val corpusId: String,
         private val corpusRepository: CorpusRepository,
         private val queryRepository: QueryRepository,
-        private val connectivityObserver: ConnectivityObserver,
+        private val connectivityObserver: ConnectivityObserver
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =

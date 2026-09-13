@@ -37,11 +37,15 @@ class FakeCorpusDao : CorpusDao {
 class FakeDocumentDao : DocumentDao {
     private val flows = mutableMapOf<String, MutableStateFlow<List<DocumentEntity>>>()
 
-    private fun flowFor(corpusId: String) = flows.getOrPut(corpusId) { MutableStateFlow(emptyList()) }
+    private fun flowFor(corpusId: String) = flows.getOrPut(corpusId) {
+        MutableStateFlow(emptyList())
+    }
 
-    override fun observeForCorpus(corpusId: String): StateFlow<List<DocumentEntity>> = flowFor(corpusId)
+    override fun observeForCorpus(corpusId: String): StateFlow<List<DocumentEntity>> =
+        flowFor(corpusId)
 
-    override suspend fun getForCorpus(corpusId: String): List<DocumentEntity> = flowFor(corpusId).value
+    override suspend fun getForCorpus(corpusId: String): List<DocumentEntity> =
+        flowFor(corpusId).value
 
     override suspend fun upsertAll(documents: List<DocumentEntity>) {
         documents.groupBy { it.corpusId }.forEach { (corpusId, docs) ->
@@ -59,9 +63,12 @@ class FakeDocumentDao : DocumentDao {
 class FakeQueryResultDao : QueryResultDao {
     private val flows = mutableMapOf<String, MutableStateFlow<List<QueryResultEntity>>>()
 
-    private fun flowFor(corpusId: String) = flows.getOrPut(corpusId) { MutableStateFlow(emptyList()) }
+    private fun flowFor(corpusId: String) = flows.getOrPut(corpusId) {
+        MutableStateFlow(emptyList())
+    }
 
-    override fun observeForCorpus(corpusId: String): StateFlow<List<QueryResultEntity>> = flowFor(corpusId)
+    override fun observeForCorpus(corpusId: String): StateFlow<List<QueryResultEntity>> =
+        flowFor(corpusId)
 
     override suspend fun upsert(result: QueryResultEntity) {
         val existing = flowFor(result.corpusId).value.associateBy { it.id }.toMutableMap()
@@ -74,11 +81,13 @@ class FakeQueryResultDao : QueryResultDao {
 
     override suspend fun markStaleWhereFingerprintDiffers(
         corpusId: String,
-        currentFingerprint: String,
+        currentFingerprint: String
     ) {
         flowFor(corpusId).value =
             flowFor(corpusId).value.map {
-                if (it.syncState == QuerySyncState.SYNCED && it.corpusFingerprint != currentFingerprint) {
+                if (it.syncState == QuerySyncState.SYNCED &&
+                    it.corpusFingerprint != currentFingerprint
+                ) {
                     it.copy(possiblyStale = true)
                 } else {
                     it

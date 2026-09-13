@@ -10,7 +10,7 @@ data class CorpusEntity(
     val name: String,
     val createdAt: String,
     val documentCount: Int,
-    val cachedAt: Long,
+    val cachedAt: Long
 )
 
 /** A cached snapshot of a document's ingestion metadata (not its content — see ADR-0003). */
@@ -22,7 +22,7 @@ data class DocumentEntity(
     val version: Int,
     val status: String,
     val chunkCount: Int,
-    val cachedAt: Long,
+    val cachedAt: Long
 )
 
 enum class QuerySyncState { SYNCED, PENDING, FAILED }
@@ -48,7 +48,7 @@ data class QueryResultEntity(
     /** True if corpus/document metadata changed since this result was produced — see ADR-0003. */
     val possiblyStale: Boolean,
     /** documentCount + max(version) fingerprint of the corpus at answer time, for staleness checks. */
-    val corpusFingerprint: String,
+    val corpusFingerprint: String
 )
 
 /**
@@ -63,5 +63,5 @@ data class PendingQueryEntity(
     val questionText: String,
     val createdAt: Long,
     val attempts: Int = 0,
-    val lastError: String? = null,
+    val lastError: String? = null
 )

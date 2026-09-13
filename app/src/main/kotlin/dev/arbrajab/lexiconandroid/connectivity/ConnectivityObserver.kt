@@ -18,35 +18,39 @@ interface ConnectivityObserver {
 
 class NetworkConnectivityObserver(context: Context) : ConnectivityObserver {
     private val connectivityManager =
-        context.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        context.applicationContext.getSystemService(
+            Context.CONNECTIVITY_SERVICE
+        ) as ConnectivityManager
 
-    override fun observe(): Flow<ConnectivityState> =
-        callbackFlow {
-            val callback =
-                object : ConnectivityManager.NetworkCallback() {
-                    override fun onAvailable(network: Network) {
-                        trySend(currentState())
-                    }
-
-                    override fun onLost(network: Network) {
-                        trySend(currentState())
-                    }
-
-                    override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
-                        trySend(currentState())
-                    }
+    override fun observe(): Flow<ConnectivityState> = callbackFlow {
+        val callback =
+            object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    trySend(currentState())
                 }
 
-            val request =
-                NetworkRequest.Builder()
-                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    .build()
+                override fun onLost(network: Network) {
+                    trySend(currentState())
+                }
 
-            connectivityManager.registerNetworkCallback(request, callback)
-            trySend(currentState())
+                override fun onCapabilitiesChanged(
+                    network: Network,
+                    capabilities: NetworkCapabilities
+                ) {
+                    trySend(currentState())
+                }
+            }
 
-            awaitClose { connectivityManager.unregisterNetworkCallback(callback) }
-        }.distinctUntilChanged()
+        val request =
+            NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
+
+        connectivityManager.registerNetworkCallback(request, callback)
+        trySend(currentState())
+
+        awaitClose { connectivityManager.unregisterNetworkCallback(callback) }
+    }.distinctUntilChanged()
 
     private fun currentState(): ConnectivityState {
         val network = connectivityManager.activeNetwork ?: return ConnectivityState.OFFLINE

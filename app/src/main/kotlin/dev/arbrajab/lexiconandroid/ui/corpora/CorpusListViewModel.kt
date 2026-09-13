@@ -19,22 +19,25 @@ data class CorpusListUiState(
     val corpora: List<CorpusEntity> = emptyList(),
     val connectivity: ConnectivityState = ConnectivityState.OFFLINE,
     val isRefreshing: Boolean = false,
-    val error: String? = null,
+    val error: String? = null
 )
 
 class CorpusListViewModel(
     private val repository: CorpusRepository,
-    connectivityObserver: ConnectivityObserver,
+    connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
     private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     val uiState: StateFlow<CorpusListUiState> =
         combine(
             repository.observeCorpora(),
             connectivityObserver.observe(),
             _isRefreshing,
-            _error,
+            _error
         ) { corpora, connectivity, refreshing, error ->
             CorpusListUiState(corpora, connectivity, refreshing, error)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CorpusListUiState())
@@ -62,7 +65,7 @@ class CorpusListViewModel(
 
     class Factory(
         private val repository: CorpusRepository,
-        private val connectivityObserver: ConnectivityObserver,
+        private val connectivityObserver: ConnectivityObserver
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =

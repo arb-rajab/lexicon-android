@@ -26,7 +26,7 @@ class CorpusRepository(
     private val corpusDao: CorpusDao,
     private val documentDao: DocumentDao,
     private val queryResultDao: QueryResultDao,
-    private val apiProvider: () -> LexiconApi,
+    private val apiProvider: () -> LexiconApi
 ) {
     fun observeCorpora(): Flow<List<CorpusEntity>> = corpusDao.observeAll()
 
@@ -49,9 +49,9 @@ class CorpusRepository(
                     name = it.name,
                     createdAt = it.createdAt,
                     documentCount = 0,
-                    cachedAt = now,
+                    cachedAt = now
                 )
-            },
+            }
         )
 
         val targets = if (corpusId != null) corpora.filter { it.id == corpusId } else corpora
@@ -64,8 +64,8 @@ class CorpusRepository(
                     name = detail.name,
                     createdAt = detail.createdAt,
                     documentCount = detail.documentCount,
-                    cachedAt = now,
-                ),
+                    cachedAt = now
+                )
             )
             documentDao.deleteForCorpus(corpus.id)
             documentDao.upsertAll(
@@ -77,13 +77,24 @@ class CorpusRepository(
                         version = it.version,
                         status = it.status,
                         chunkCount = it.chunkCount,
-                        cachedAt = now,
+                        cachedAt = now
                     )
-                },
+                }
             )
-            val fingerprint = computeCorpusFingerprint(detail.documentCount, documents.map {
-                DocumentEntity(it.id, corpus.id, it.sourceFilename, it.version, it.status, it.chunkCount, now)
-            })
+            val fingerprint = computeCorpusFingerprint(
+                detail.documentCount,
+                documents.map {
+                    DocumentEntity(
+                        it.id,
+                        corpus.id,
+                        it.sourceFilename,
+                        it.version,
+                        it.status,
+                        it.chunkCount,
+                        now
+                    )
+                }
+            )
             queryResultDao.markStaleWhereFingerprintDiffers(corpus.id, fingerprint)
         }
     }

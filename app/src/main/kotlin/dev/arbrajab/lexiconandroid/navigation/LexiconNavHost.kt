@@ -36,45 +36,51 @@ fun LexiconNavHost(app: LexiconApplication) {
                 viewModel(factory = ServerConfigViewModel.Factory(app.serverConfigStore))
             ServerConfigScreen(
                 viewModel = viewModel,
-                onContinue = { navController.navigate(Routes.CORPUS_LIST) },
+                onContinue = { navController.navigate(Routes.CORPUS_LIST) }
             )
         }
         composable(Routes.CORPUS_LIST) {
             val viewModel: CorpusListViewModel =
                 viewModel(
-                    factory = CorpusListViewModel.Factory(app.corpusRepository, app.connectivityObserver),
+                    factory = CorpusListViewModel.Factory(
+                        app.corpusRepository,
+                        app.connectivityObserver
+                    )
                 )
             CorpusListScreen(
                 viewModel = viewModel,
                 pendingCount = pendingCount,
                 onOpenCorpus = { id ->
-                    val name = viewModel.uiState.value.corpora.firstOrNull { it.id == id }?.name ?: ""
+                    val name =
+                        viewModel.uiState.value.corpora.firstOrNull { it.id == id }?.name ?: ""
                     navController.navigate(Routes.corpusDetail(id, name))
                 },
-                onOpenSettings = { navController.navigate(Routes.SERVER_CONFIG) },
+                onOpenSettings = { navController.navigate(Routes.SERVER_CONFIG) }
             )
         }
         composable(
             Routes.CORPUS_DETAIL,
             arguments =
-                listOf(
-                    navArgument("corpusId") { type = NavType.StringType },
-                    navArgument("corpusName") { type = NavType.StringType },
-                ),
+            listOf(
+                navArgument("corpusId") { type = NavType.StringType },
+                navArgument("corpusName") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val corpusId = backStackEntry.arguments?.getString("corpusId").orEmpty()
             val corpusName = backStackEntry.arguments?.getString("corpusName").orEmpty()
             val viewModel: QueryViewModel =
                 viewModel(
                     factory =
-                        QueryViewModel.Factory(
-                            corpusId,
-                            app.corpusRepository,
-                            app.queryRepository,
-                            app.connectivityObserver,
-                        ),
+                    QueryViewModel.Factory(
+                        corpusId,
+                        app.corpusRepository,
+                        app.queryRepository,
+                        app.connectivityObserver
+                    )
                 )
-            QueryScreen(viewModel = viewModel, corpusName = corpusName, onBack = { navController.popBackStack() })
+            QueryScreen(viewModel = viewModel, corpusName = corpusName, onBack = {
+                navController.popBackStack()
+            })
         }
     }
 }

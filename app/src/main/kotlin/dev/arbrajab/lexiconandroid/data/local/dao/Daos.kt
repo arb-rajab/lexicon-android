@@ -55,7 +55,7 @@ interface QueryResultDao {
 
     @Query(
         "UPDATE query_results SET possiblyStale = 1 " +
-            "WHERE corpusId = :corpusId AND corpusFingerprint != :currentFingerprint AND syncState = 'SYNCED'",
+            "WHERE corpusId = :corpusId AND corpusFingerprint != :currentFingerprint AND syncState = 'SYNCED'"
     )
     suspend fun markStaleWhereFingerprintDiffers(corpusId: String, currentFingerprint: String)
 

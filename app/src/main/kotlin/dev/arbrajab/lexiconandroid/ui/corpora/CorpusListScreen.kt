@@ -25,7 +25,7 @@ fun CorpusListScreen(
     viewModel: CorpusListViewModel,
     pendingCount: Int,
     onOpenCorpus: (String) -> Unit,
-    onOpenSettings: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -37,9 +37,9 @@ fun CorpusListScreen(
                     IconButton(onClick = onOpenSettings) {
                         Text("⚙")
                     }
-                },
+                }
             )
-        },
+        }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             ConnectivityBanner(connectivityState = state.connectivity, pendingCount = pendingCount)
@@ -47,29 +47,29 @@ fun CorpusListScreen(
                 Text(
                     "Couldn't refresh: ${state.error}. Showing cached results.",
                     modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
             if (state.corpora.isEmpty()) {
                 Text(
                     if (state.isRefreshing) "Loading…" else "No corpora cached yet.",
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(16.dp)
                 )
             }
             LazyColumn {
                 items(state.corpora, key = { it.id }) { corpus ->
                     Card(
                         modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 6.dp)
-                                .clickable { onOpenCorpus(corpus.id) },
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                            .clickable { onOpenCorpus(corpus.id) }
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(corpus.name, style = MaterialTheme.typography.titleMedium)
                             Text(
                                 "${corpus.documentCount} document(s)",
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }

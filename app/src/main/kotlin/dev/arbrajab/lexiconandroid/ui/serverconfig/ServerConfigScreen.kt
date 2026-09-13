@@ -24,22 +24,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
  * a username/password form.
  */
 @Composable
-fun ServerConfigScreen(
-    viewModel: ServerConfigViewModel,
-    onContinue: () -> Unit,
-) {
+fun ServerConfigScreen(viewModel: ServerConfigViewModel, onContinue: () -> Unit) {
     val config by viewModel.uiState.collectAsState()
     val saved by viewModel.saved.collectAsState()
 
     Scaffold(topBar = { TopAppBar(title = { Text("Connect to lexicon") }) }) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
                 "lexicon has no built-in login in v1 — enter your deployment's URL and, " +
                     "if your operator requires one, an auth header.",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium
             )
             OutlinedTextField(
                 value = config.baseUrl,
@@ -47,7 +44,7 @@ fun ServerConfigScreen(
                 label = { Text("Server URL") },
                 placeholder = { Text("https://lexicon.example.com") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
+                singleLine = true
             )
             OutlinedTextField(
                 value = config.authHeaderName,
@@ -55,7 +52,7 @@ fun ServerConfigScreen(
                 label = { Text("Auth header name (optional)") },
                 placeholder = { Text("Authorization") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
+                singleLine = true
             )
             OutlinedTextField(
                 value = config.authHeaderValue,
@@ -63,7 +60,7 @@ fun ServerConfigScreen(
                 label = { Text("Auth header value (optional)") },
                 placeholder = { Text("Bearer …") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
+                singleLine = true
             )
             Button(
                 onClick = {
@@ -71,7 +68,7 @@ fun ServerConfigScreen(
                     onContinue()
                 },
                 enabled = config.baseUrl.isNotBlank(),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(if (saved) "Saved — continue" else "Save and continue")
             }

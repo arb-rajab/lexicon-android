@@ -29,10 +29,10 @@ class Converters {
         CorpusEntity::class,
         DocumentEntity::class,
         QueryResultEntity::class,
-        PendingQueryEntity::class,
+        PendingQueryEntity::class
     ],
     version = 1,
-    exportSchema = false,
+    exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -44,13 +44,12 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         @Volatile private var instance: AppDatabase? = null
 
-        fun getInstance(context: Context): AppDatabase =
-            instance ?: synchronized(this) {
-                instance ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "lexicon.db",
-                ).build().also { instance = it }
-            }
+        fun getInstance(context: Context): AppDatabase = instance ?: synchronized(this) {
+            instance ?: Room.databaseBuilder(
+                context.applicationContext,
+                AppDatabase::class.java,
+                "lexicon.db"
+            ).build().also { instance = it }
+        }
     }
 }

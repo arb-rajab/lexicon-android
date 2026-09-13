@@ -17,7 +17,8 @@ import dev.arbrajab.lexiconandroid.LexiconApplication
  * a duplicate worker per tap — one drain pass handles everything queued so
  * far.
  */
-class SyncQueueWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class SyncQueueWorker(context: Context, params: WorkerParameters) :
+    CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val app = applicationContext as LexiconApplication
         val repository = app.queryRepository
@@ -40,7 +41,9 @@ class SyncQueueWorker(context: Context, params: WorkerParameters) : CoroutineWor
         private const val UNIQUE_WORK_NAME = "sync_pending_queries"
 
         fun enqueue(context: Context) {
-            val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+            val constraints = Constraints.Builder().setRequiredNetworkType(
+                NetworkType.CONNECTED
+            ).build()
             val request =
                 OneTimeWorkRequestBuilder<SyncQueueWorker>()
                     .setConstraints(constraints)

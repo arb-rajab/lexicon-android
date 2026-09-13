@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
 data class CorpusDto(
     val id: String,
     val name: String,
-    @SerialName("created_at") val createdAt: String,
+    @SerialName("created_at") val createdAt: String
 )
 
 @Serializable
@@ -21,7 +21,7 @@ data class CorpusDetailDto(
     val id: String,
     val name: String,
     @SerialName("created_at") val createdAt: String,
-    @SerialName("document_count") val documentCount: Int,
+    @SerialName("document_count") val documentCount: Int
 )
 
 @Serializable
@@ -33,7 +33,7 @@ data class DocumentDto(
     @SerialName("source_filename") val sourceFilename: String,
     val version: Int,
     val status: String,
-    @SerialName("chunk_count") val chunkCount: Int,
+    @SerialName("chunk_count") val chunkCount: Int
 )
 
 @Serializable
@@ -43,7 +43,7 @@ data class DocumentDetailDto(
     val version: Int,
     val status: String,
     @SerialName("chunk_count") val chunkCount: Int,
-    @SerialName("uploaded_at") val uploadedAt: String,
+    @SerialName("uploaded_at") val uploadedAt: String
 )
 
 @Serializable
@@ -55,7 +55,7 @@ data class CitationDto(
     @SerialName("document_id") val documentId: String,
     @SerialName("source_filename") val sourceFilename: String,
     @SerialName("section_heading") val sectionHeading: String,
-    @SerialName("claim_text") val claimText: String,
+    @SerialName("claim_text") val claimText: String
 )
 
 @Serializable
@@ -65,15 +65,11 @@ data class QueryResponseDto(
     val answer: String?,
     val citations: List<CitationDto> = emptyList(),
     @SerialName("refusal_reason") val refusalReason: String?,
-    @SerialName("retrieved_chunk_count") val retrievedChunkCount: Int,
+    @SerialName("retrieved_chunk_count") val retrievedChunkCount: Int
 )
 
 @Serializable
 data class ApiErrorEnvelope(val error: ApiErrorBody)
 
 @Serializable
-data class ApiErrorBody(
-    val code: String,
-    val message: String,
-    val field: String? = null,
-)
+data class ApiErrorBody(val code: String, val message: String, val field: String? = null)

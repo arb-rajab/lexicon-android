@@ -13,7 +13,7 @@ private val Context.dataStore by preferencesDataStore(name = "server_config")
 data class ServerConfig(
     val baseUrl: String = "",
     val authHeaderName: String = "",
-    val authHeaderValue: String = "",
+    val authHeaderValue: String = ""
 ) {
     val isConfigured: Boolean get() = baseUrl.isNotBlank()
 }
@@ -38,7 +38,7 @@ class ServerConfigStore(private val context: Context) {
             ServerConfig(
                 baseUrl = prefs[keyBaseUrl] ?: "",
                 authHeaderName = prefs[keyHeaderName] ?: "",
-                authHeaderValue = prefs[keyHeaderValue] ?: "",
+                authHeaderValue = prefs[keyHeaderValue] ?: ""
             )
         }
 
@@ -46,7 +46,8 @@ class ServerConfigStore(private val context: Context) {
 
     suspend fun save(config: ServerConfig) {
         context.dataStore.edit { prefs ->
-            prefs[keyBaseUrl] = if (config.baseUrl.isBlank()) "" else config.baseUrl.trimEnd('/') + "/"
+            prefs[keyBaseUrl] =
+                if (config.baseUrl.isBlank()) "" else config.baseUrl.trimEnd('/') + "/"
             prefs[keyHeaderName] = config.authHeaderName
             prefs[keyHeaderValue] = config.authHeaderValue
         }

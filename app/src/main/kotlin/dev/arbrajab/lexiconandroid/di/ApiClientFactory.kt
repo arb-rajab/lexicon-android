@@ -2,6 +2,7 @@ package dev.arbrajab.lexiconandroid.di
 
 import dev.arbrajab.lexiconandroid.data.ServerConfig
 import dev.arbrajab.lexiconandroid.data.remote.LexiconApi
+import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
@@ -10,10 +11,10 @@ import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
-import java.util.concurrent.TimeUnit
 
 /** Attaches the user-configured static auth header, if any (see ServerConfigStore). */
-private class StaticHeaderInterceptor(private val configProvider: () -> ServerConfig) : Interceptor {
+private class StaticHeaderInterceptor(private val configProvider: () -> ServerConfig) :
+    Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val config = configProvider()
         val request = chain.request().newBuilder()

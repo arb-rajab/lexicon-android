@@ -55,7 +55,7 @@ class LexiconApplication : Application() {
                 corpusDao = database.corpusDao(),
                 documentDao = database.documentDao(),
                 queryResultDao = database.queryResultDao(),
-                apiProvider = ::currentApi,
+                apiProvider = ::currentApi
             )
         queryRepository =
             QueryRepository(
@@ -65,7 +65,7 @@ class LexiconApplication : Application() {
                 documentDao = database.documentDao(),
                 connectivityObserver = connectivityObserver,
                 apiProvider = ::currentApi,
-                onQueryQueued = { SyncQueueWorker.enqueue(this) },
+                onQueryQueued = { SyncQueueWorker.enqueue(this) }
             )
     }
 }

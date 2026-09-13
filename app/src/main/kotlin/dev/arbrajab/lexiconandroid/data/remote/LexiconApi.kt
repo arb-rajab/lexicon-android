@@ -33,6 +33,6 @@ interface LexiconApi {
     @POST("api/v1/corpora/{corpusId}/query")
     suspend fun askQuestion(
         @Path("corpusId") corpusId: String,
-        @Body request: QueryRequestDto,
+        @Body request: QueryRequestDto
     ): QueryResponseDto
 }

@@ -12,11 +12,11 @@ import dev.arbrajab.lexiconandroid.data.local.entity.QuerySyncState
 import dev.arbrajab.lexiconandroid.data.remote.LexiconApi
 import dev.arbrajab.lexiconandroid.data.remote.dto.CitationDto
 import dev.arbrajab.lexiconandroid.data.remote.dto.QueryRequestDto
+import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.util.UUID
 
 sealed interface SubmitQueryOutcome {
     data class Answered(val result: QueryResultEntity) : SubmitQueryOutcome
@@ -37,7 +37,7 @@ class QueryRepository(
     private val connectivityObserver: ConnectivityObserver,
     private val apiProvider: () -> LexiconApi,
     private val onQueryQueued: () -> Unit = {},
-    private val json: Json = Json { ignoreUnknownKeys = true },
+    private val json: Json = Json { ignoreUnknownKeys = true }
 ) {
     fun observeResults(corpusId: String): Flow<List<QueryResultEntity>> =
         queryResultDao.observeForCorpus(corpusId)
@@ -65,23 +65,33 @@ class QueryRepository(
         return queueOffline(corpusId, question)
     }
 
-    private suspend fun answerLive(corpusId: String, question: String): SubmitQueryOutcome.Answered {
+    private suspend fun answerLive(
+        corpusId: String,
+        question: String
+    ): SubmitQueryOutcome.Answered {
         val api = apiProvider()
         val response = api.askQuestion(corpusId, QueryRequestDto(question))
-        val result = cacheAnsweredResult(corpusId, question, response.let {
-            CachedAnswer(
-                id = it.queryLogId,
-                answered = it.answered,
-                answerText = it.answer,
-                refusalReason = it.refusalReason,
-                retrievedChunkCount = it.retrievedChunkCount,
-                citations = it.citations,
-            )
-        })
+        val result = cacheAnsweredResult(
+            corpusId,
+            question,
+            response.let {
+                CachedAnswer(
+                    id = it.queryLogId,
+                    answered = it.answered,
+                    answerText = it.answer,
+                    refusalReason = it.refusalReason,
+                    retrievedChunkCount = it.retrievedChunkCount,
+                    citations = it.citations
+                )
+            }
+        )
         return SubmitQueryOutcome.Answered(result)
     }
 
-    private suspend fun queueOffline(corpusId: String, question: String): SubmitQueryOutcome.Queued {
+    private suspend fun queueOffline(
+        corpusId: String,
+        question: String
+    ): SubmitQueryOutcome.Queued {
         val now = System.currentTimeMillis()
         val localId = UUID.randomUUID().toString()
         val pending =
@@ -89,7 +99,7 @@ class QueryRepository(
                 localId = localId,
                 corpusId = corpusId,
                 questionText = question,
-                createdAt = now,
+                createdAt = now
             )
         pendingQueryDao.insert(pending)
         queryResultDao.upsert(
@@ -106,8 +116,8 @@ class QueryRepository(
                 cachedAt = now,
                 syncState = QuerySyncState.PENDING,
                 possiblyStale = false,
-                corpusFingerprint = currentFingerprint(corpusId),
-            ),
+                corpusFingerprint = currentFingerprint(corpusId)
+            )
         )
         onQueryQueued()
         return SubmitQueryOutcome.Queued(pending)
@@ -130,15 +140,19 @@ class QueryRepository(
                     answerText = response.answer,
                     refusalReason = response.refusalReason,
                     retrievedChunkCount = response.retrievedChunkCount,
-                    citations = response.citations,
-                ),
+                    citations = response.citations
+                )
             )
             queryResultDao.deleteById(pending.localId)
             pendingQueryDao.delete(pending)
             true
         } catch (exc: java.io.IOException) {
             pendingQueryDao.update(
-                pending.copy(attempts = pending.attempts + 1, lastError = exc.message ?: "network error"),
+                pending.copy(
+                    attempts = pending.attempts + 1,
+                    lastError =
+                    exc.message ?: "network error"
+                )
             )
             false
         }
@@ -150,13 +164,13 @@ class QueryRepository(
         val answerText: String?,
         val refusalReason: String?,
         val retrievedChunkCount: Int,
-        val citations: List<CitationDto>,
+        val citations: List<CitationDto>
     )
 
     private suspend fun cacheAnsweredResult(
         corpusId: String,
         question: String,
-        answer: CachedAnswer,
+        answer: CachedAnswer
     ): QueryResultEntity {
         val now = System.currentTimeMillis()
         val result =
@@ -173,7 +187,7 @@ class QueryRepository(
                 cachedAt = now,
                 syncState = QuerySyncState.SYNCED,
                 possiblyStale = false,
-                corpusFingerprint = currentFingerprint(corpusId),
+                corpusFingerprint = currentFingerprint(corpusId)
             )
         queryResultDao.upsert(result)
         return result
