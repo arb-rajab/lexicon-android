@@ -23,6 +23,13 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The action's default `packages` input ("tools platform-tools") includes the
+          # legacy "Android SDK Tools" package, which Google has removed from the SDK
+          # repository — requesting it now fails the whole step. Gradle/AGP auto-installs
+          # whatever compileSdk/build-tools versions it actually needs via the accepted
+          # licenses below, so platform-tools (adb et al.) is the only package to fetch here.
+          packages: "platform-tools"
 
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v3
@@ -65,6 +72,10 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # See the lint-and-test job's identical step for why: the action's default
+          # `packages` input requests the now-removed legacy "tools" package.
+          packages: "platform-tools"
 
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v3

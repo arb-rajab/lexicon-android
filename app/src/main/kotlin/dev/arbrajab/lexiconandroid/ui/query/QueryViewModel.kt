@@ -23,7 +23,8 @@ data class QueryScreenUiState(
     val connectivity: ConnectivityState = ConnectivityState.OFFLINE,
     val pendingCount: Int = 0,
     val questionInput: String = "",
-    val isSubmitting: Boolean = false
+    val isSubmitting: Boolean = false,
+    val isRefreshing: Boolean = false
 )
 
 class QueryViewModel(
@@ -37,6 +38,8 @@ class QueryViewModel(
 
     private val _isSubmitting = MutableStateFlow(false)
     val isSubmitting: StateFlow<Boolean> = _isSubmitting.asStateFlow()
+
+    private val _isRefreshing = MutableStateFlow(false)
 
     val uiState: StateFlow<QueryScreenUiState> =
         combine(
@@ -53,10 +56,30 @@ class QueryViewModel(
                 pendingCount = pendingCount,
                 questionInput = question
             )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), QueryScreenUiState())
+        }.combine(_isRefreshing) { state, isRefreshing -> state.copy(isRefreshing = isRefreshing) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), QueryScreenUiState())
 
     fun onQuestionChanged(value: String) {
         _questionInput.value = value
+    }
+
+    /** Reuses [CorpusRepository.refresh]'s corpus-scoped path — no parallel refresh logic. */
+    fun refresh() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                corpusRepository.refresh(corpusId)
+            } catch (_: Exception) {
+                // Cached documents (already flowing from Room) stay visible even if this
+                // refresh fails, matching CorpusListViewModel's offline-first behavior.
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
+
+    fun retryFailed(result: QueryResultEntity) {
+        viewModelScope.launch { queryRepository.retryFailed(result) }
     }
 
     fun submit() {

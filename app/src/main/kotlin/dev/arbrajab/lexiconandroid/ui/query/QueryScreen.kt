@@ -12,12 +12,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PullToRefreshBox
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.arbrajab.lexiconandroid.data.local.entity.QueryResultEntity
@@ -40,8 +43,16 @@ fun QueryScreen(viewModel: QueryViewModel, corpusName: String, onBack: () -> Uni
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
-            LazyColumn(modifier = Modifier.weight(1f, fill = true).fillMaxWidth()) {
-                items(state.results, key = { it.id }) { result -> QueryResultCard(result) }
+            PullToRefreshBox(
+                isRefreshing = state.isRefreshing,
+                onRefresh = viewModel::refresh,
+                modifier = Modifier.weight(1f, fill = true).fillMaxWidth()
+            ) {
+                LazyColumn {
+                    items(state.results, key = { it.id }) { result ->
+                        QueryResultCard(result, onRetry = { viewModel.retryFailed(result) })
+                    }
+                }
             }
             Row(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 OutlinedTextField(
@@ -67,7 +78,7 @@ fun QueryScreen(viewModel: QueryViewModel, corpusName: String, onBack: () -> Uni
 }
 
 @Composable
-private fun QueryResultCard(result: QueryResultEntity) {
+private fun QueryResultCard(result: QueryResultEntity, onRetry: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(result.questionText, style = MaterialTheme.typography.titleSmall)
@@ -79,11 +90,15 @@ private fun QueryResultCard(result: QueryResultEntity) {
                         color = MaterialTheme.colorScheme.tertiary
                     )
                 QuerySyncState.FAILED ->
-                    Text(
-                        "Failed to sync after repeated attempts — ask again to retry",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Failed to sync after repeated attempts",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TextButton(onClick = onRetry) { Text("Retry") }
+                    }
                 QuerySyncState.SYNCED -> {
                     if (result.possiblyStale) {
                         Text(

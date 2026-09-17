@@ -160,6 +160,32 @@ class QueryRepositoryTest {
         }
 
     @Test
+    fun `retryFailed drops the old FAILED row and re-submits the same question fresh`() =
+        runTest {
+            connectivity.state.value = ConnectivityState.OFFLINE
+            val queued = repository.submitQuery(corpusId, "Why?") as SubmitQueryOutcome.Queued
+            api.askQuestionShouldFail = true
+            var pending = queued.pending
+            repeat(QueryRepository.MAX_SYNC_ATTEMPTS) {
+                repository.replayPending(pending)
+                pending = pendingQueryDao.getAll().firstOrNull() ?: pending
+            }
+            val failed = queryResultDao.observeForCorpus(corpusId).value.first()
+            check(failed.syncState == QuerySyncState.FAILED)
+
+            // Retrying while still offline re-queues it as a brand-new PENDING entry with a
+            // fresh attempt count, rather than resurrecting the permanently-failed one.
+            val outcome = repository.retryFailed(failed)
+
+            check(outcome is SubmitQueryOutcome.Queued)
+            assertEquals(0, outcome.pending.attempts)
+            val cached = queryResultDao.observeForCorpus(corpusId).value
+            assertEquals(1, cached.size)
+            assertEquals(QuerySyncState.PENDING, cached.first().syncState)
+            assertEquals("Why?", cached.first().questionText)
+        }
+
+    @Test
     fun `a cached synced result is marked possibly stale once the corpus fingerprint changes`() =
         runTest {
             corpusDao.upsert(

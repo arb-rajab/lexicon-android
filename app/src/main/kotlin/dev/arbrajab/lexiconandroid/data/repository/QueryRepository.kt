@@ -139,6 +139,16 @@ class QueryRepository(
         return SubmitQueryOutcome.Queued(pending)
     }
 
+    /**
+     * One-tap retry for a [QuerySyncState.FAILED] result (see ADR-0006): drops the old,
+     * permanently-failed row and re-submits the same question text through [submitQuery],
+     * exactly as if the user had re-typed and asked it again.
+     */
+    suspend fun retryFailed(result: QueryResultEntity): SubmitQueryOutcome {
+        queryResultDao.deleteById(result.id)
+        return submitQuery(result.corpusId, result.questionText)
+    }
+
     /** Replays one queued query. See [ReplayResult] for what each outcome means. */
     suspend fun replayPending(pending: PendingQueryEntity): ReplayResult {
         val api = apiProvider()

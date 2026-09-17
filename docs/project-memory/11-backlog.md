@@ -5,21 +5,27 @@
 
 ## Near-term
 
+All three items tracked here as of Session N's handoff were completed in
+Session N+1:
+
 - **MockWebServer-based integration tests** for `LexiconApi`/`ApiClientFactory`
-  — today's unit tests fake the API interface directly; a real
-  HTTP-round-trip test would catch serialization/URL-construction bugs the
-  fakes can't.
+  — done. `LexiconApiIntegrationTest` round-trips real HTTP requests through
+  `ApiClientFactory` against a `MockWebServer`, covering path/method
+  construction (including URL-encoding a corpus id containing `/`), request
+  body serialization, the configured static auth header being attached (and
+  absent when unconfigured), and a 4xx response surfacing as `HttpException`
+  rather than being swallowed.
 - **Pull-to-refresh on the document list within a corpus** (`QueryScreen`) —
-  Session N added it to the corpus list (`CorpusListScreen`) only; the query
-  screen still refreshes only on entry. Same `PullToRefreshBox` +
-  `CorpusRepository.refresh(corpusId)` pattern, just not done this session for
-  scope reasons.
-- **Per-corpus retry button for `FAILED` query results.** Session N's
-  backoff cap (`QueryRepository.MAX_SYNC_ATTEMPTS`, see ADR-0006) surfaces a
-  permanently-failed query as `QuerySyncState.FAILED` in `QueryScreen`, but
-  the only way to retry it today is to re-type and resubmit the same
-  question by hand. A "retry" affordance on the `FAILED` card that
-  re-submits `questionText` directly would be a small, real UX improvement.
+  done, via the same `PullToRefreshBox` + `CorpusRepository.refresh(corpusId)`
+  pattern `CorpusListScreen` already used.
+- **Per-corpus retry button for `FAILED` query results** — done.
+  `QueryRepository.retryFailed` drops the old permanently-failed row and
+  re-submits the same `questionText` through `submitQuery` (a fresh
+  `PENDING`/`SYNCED` outcome with `attempts` reset to 0, not a resurrection
+  of the failed one), wired to a "Retry" button on the `FAILED` card.
+
+Nothing is currently tracked as near-term backlog beyond the design gaps and
+explicitly-out-of-scope items below.
 
 ## Design gaps acknowledged, not solved
 
