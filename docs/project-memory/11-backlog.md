@@ -1,28 +1,25 @@
 # Backlog
 
 > Project: lexicon-android (public)
-> Last updated: 2026-09-13
+> Last updated: 2026-09-17
 
 ## Near-term
 
-- **Wire instrumented tests into CI.** `app/src/androidTest/` exists and is
-  written against the real Compose UI, but this session had no Android
-  emulator/device available, so it has never actually been run. Add a
-  hosted-emulator CI job (e.g. `reactivecircus/android-emulator-runner`) or a
-  device-lab integration, budget the added CI time/cost, and confirm the
-  existing tests actually pass on a real target before trusting them.
 - **MockWebServer-based integration tests** for `LexiconApi`/`ApiClientFactory`
   — today's unit tests fake the API interface directly; a real
   HTTP-round-trip test would catch serialization/URL-construction bugs the
   fakes can't.
-- **Retry/backoff policy for `SyncQueueWorker`.** Currently a failed replay
-  just increments `attempts` and the worker returns `Result.retry()`
-  (WorkManager's default exponential backoff applies), but there's no cap or
-  dead-letter handling for a query that keeps failing indefinitely (e.g. a
-  malformed question that the server always 422s on) — it will retry forever
-  rather than surfacing "this one is stuck" to the user.
-- **Pull-to-refresh gesture** on the corpus list and document list (currently
-  refresh only happens on screen entry / server config save).
+- **Pull-to-refresh on the document list within a corpus** (`QueryScreen`) —
+  Session N added it to the corpus list (`CorpusListScreen`) only; the query
+  screen still refreshes only on entry. Same `PullToRefreshBox` +
+  `CorpusRepository.refresh(corpusId)` pattern, just not done this session for
+  scope reasons.
+- **Per-corpus retry button for `FAILED` query results.** Session N's
+  backoff cap (`QueryRepository.MAX_SYNC_ATTEMPTS`, see ADR-0006) surfaces a
+  permanently-failed query as `QuerySyncState.FAILED` in `QueryScreen`, but
+  the only way to retry it today is to re-type and resubmit the same
+  question by hand. A "retry" affordance on the `FAILED` card that
+  re-submits `questionText` directly would be a small, real UX improvement.
 
 ## Design gaps acknowledged, not solved
 

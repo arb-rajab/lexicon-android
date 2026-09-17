@@ -1,9 +1,73 @@
 # Session Handoff
 
 > Project: lexicon-android (public)
-> Last updated: 2026-09-13
+> Last updated: 2026-09-17
 
-## Session 1 (this session)
+## Session N: CI-instrumented tests, pull-to-refresh, sync retry/backoff cap
+
+**Scope worked (backlog cleanup):**
+
+1. **Wired instrumented tests into CI** (`.github/workflows/android-ci.yml`,
+   new `instrumented-tests` job) using
+   `reactivecircus/android-emulator-runner@v2` on GitHub-hosted
+   `ubuntu-latest` runners (API 30, `google_apis`/`x86_64`,
+   `-no-window -gpu swiftshader_indirect`), with the standard "Enable KVM"
+   udev-rule step. This is viable — unlike bookslot-mobile's KVM blocker —
+   because GitHub enabled hardware-accelerated Android virtualization on its
+   own hosted Linux runners in February 2023; this environment's earlier
+   inability to run `connectedAndroidTest` was about *this sandbox* having no
+   emulator/KVM access, not about GitHub Actions lacking it. See
+   `07-testing-strategy.md` for the full reasoning and citation.
+   **Not verified green from inside this sandbox** — this session has no
+   network path to `dl.google.com` either (confirmed again: `./gradlew
+   ktlintCheck` fails at AGP plugin resolution before reaching any Android
+   SDK step), so CI is still the first real compile/run of this project, now
+   including the instrumented job. Whoever picks this up next should confirm
+   it's actually green and fix whatever it surfaces.
+2. **Pull-to-refresh** on `CorpusListScreen` via Material3's
+   `PullToRefreshBox`, wired to the same `CorpusListViewModel.refresh()` →
+   `CorpusRepository.refresh()` path already used on screen entry — no
+   parallel refresh logic. (Document-list pull-to-refresh on `QueryScreen`
+   was **not** done this session — see backlog.)
+3. **Sync retry/backoff cap** for the offline query queue — see ADR-0006 in
+   `09-decision-log.md` for the full decision. Short version:
+   `QueryRepository.MAX_SYNC_ATTEMPTS = 5`; a query that keeps failing past
+   that cap is dequeued for good and its cached result flips to
+   `QuerySyncState.FAILED`, which `QueryScreen` already had a (previously
+   dead) UI branch for. Covered by two new unit tests in
+   `QueryRepositoryTest` (the existing "increments attempts and keeps
+   queued" test plus a new "gives up after MAX_SYNC_ATTEMPTS" test) — no
+   emulator needed, per `07-testing-strategy.md`'s existing philosophy of
+   keeping this logic unit-testable.
+
+**Explicitly not touched:** the Dependabot-enabled confirmation loose end
+(admin-only, out of scope per this session's instructions).
+
+**Remaining backlog** (see `11-backlog.md` for the authoritative, living
+list — this is a snapshot as of this session):
+- Confirm the new `instrumented-tests` CI job is actually green on a real
+  run (see above) — the single highest-priority follow-up, same as last
+  session's CI-verification item but now scoped to the instrumented job
+  specifically.
+- MockWebServer-based integration tests for `LexiconApi`/`ApiClientFactory`
+  (carried over, untouched this session).
+- Pull-to-refresh on `QueryScreen`'s document/result list (only the corpus
+  list got it this session).
+- A one-tap retry affordance for `FAILED` query results (today, retrying a
+  permanently-failed query means manually re-typing and resubmitting the
+  same question).
+- Design gaps acknowledged-not-solved from before (coarse staleness
+  fingerprint, no pagination, placeholder auth model) — untouched, still
+  accurate.
+- The Dependabot admin-action loose end — explicitly out of scope, still
+  outstanding, still not this session's to attempt.
+
+Nothing from this session's assigned scope (CI instrumented tests wiring,
+pull-to-refresh, sync retry/backoff cap) was silently dropped — each is
+either done-and-verified-by-tests-where-testable, or done-but-flagged as
+CI-unverified-from-this-sandbox above.
+
+## Session 1
 
 **Environment constraints hit, and how they were handled:**
 

@@ -1,7 +1,7 @@
 # Decision Log (ADRs)
 
 > Project: lexicon-android (public)
-> Last updated: 2026-09-13
+> Last updated: 2026-09-17
 
 ## ADR-0001: No login screen — server URL + optional static header instead
 
@@ -128,3 +128,58 @@ convention.
 **Consequences:** Consistent with using Kotlin's own serialization plugin
 throughout (also used by Room's type converters indirectly); avoids adding
 Moshi's separate codegen step for a project this size.
+
+## ADR-0006: Capped sync retries — a permanently-failing query surfaces as FAILED, not retried forever
+
+**Status:** Accepted
+
+**Context:** Before Session N, `QueryRepository.replayPending` on an
+`IOException` just incremented `PendingQueryEntity.attempts` and returned
+`false`; `SyncQueueWorker.doWork()` returned `Result.retry()` whenever any
+item failed. WorkManager's own exponential backoff (default: doubling delay
+from ~10s, capped around 5h between attempts) means a query that will *never*
+succeed — e.g. a malformed question the server always 422s on, or a
+corpus/document the server has since deleted — retried on every sync pass
+indefinitely, with no way for the app or the user to ever learn "this one is
+stuck."
+
+**Decision:** `QueryRepository.MAX_SYNC_ATTEMPTS = 5` is an explicit cap on
+replay attempts per queued query. `replayPending` now returns a `ReplayResult`
+(`SUCCESS` / `RETRYING` / `PERMANENTLY_FAILED`) instead of a bare `Boolean`.
+Once `attempts` would reach the cap, the `PendingQueryEntity` is deleted from
+the offline queue for good (it will never be replayed again) and the
+matching `QueryResultEntity` (keyed by the same `localId`) is updated to
+`QuerySyncState.FAILED` via `QueryResultDao.markFailed`. `QueryScreen`
+already had a `FAILED` branch in its `when (result.syncState)` (dead code
+until now, since nothing previously set that state) — Session N updated its
+copy from "will retry automatically" (no longer true) to "ask again to
+retry," since re-submitting the same question text is the only way to retry
+a capped-out query today (see `11-backlog.md` for a proposed one-tap retry
+affordance). `SyncQueueWorker.doWork()` now only returns `Result.retry()`
+when at least one item came back `RETRYING`; a `PERMANENTLY_FAILED` item is
+already dequeued and must not force another drain pass.
+
+**Alternatives considered:**
+- *No cap (status quo).* Rejected: this is the actual bug this ADR exists to
+  fix — see Context.
+- *Cap by wall-clock age instead of attempt count* (e.g. give up after a
+  query has been queued for 24h). Rejected for now: attempt count is simpler
+  to test deterministically and doesn't depend on how often the device
+  actually comes online; a query that's queued for a long time while
+  genuinely offline (not failing) should keep waiting, not expire.
+- *Silently drop the query after the cap* instead of marking it `FAILED`.
+  Rejected: same "clear, honest UI indication" requirement ADR-0003 already
+  established for staleness applies here — a query the user asked
+  disappearing with no trace is worse than one visibly marked as failed.
+
+**Consequences:** `MAX_SYNC_ATTEMPTS = 5` is a judgment call, not measured
+against real-world failure/retry timing data (this project has no
+production traffic to tune it against) — revisit if it proves too
+aggressive (legitimate transient outages longer than WorkManager's backoff
+window across 5 attempts) or too lax (users see "stuck" queries for too
+long before they're marked failed). The cap intentionally doesn't
+distinguish *why* a call keeps failing (permanent 4xx-shaped failure vs.
+prolonged connectivity loss) — `QueryRepository.submitQuery`/`replayPending`
+only ever catch `IOException`, so an HTTP error response the server returns
+(as opposed to a transport-level failure) was never retried in the first
+place and this ADR doesn't change that.

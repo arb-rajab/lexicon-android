@@ -61,6 +61,9 @@ interface QueryResultDao {
 
     @Query("DELETE FROM query_results WHERE id = :id")
     suspend fun deleteById(id: String)
+
+    @Query("UPDATE query_results SET syncState = 'FAILED' WHERE id = :id")
+    suspend fun markFailed(id: String)
 }
 
 @Dao

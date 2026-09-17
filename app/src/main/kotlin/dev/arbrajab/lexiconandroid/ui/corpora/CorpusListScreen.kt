@@ -5,11 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PullToRefreshBox
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -20,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.arbrajab.lexiconandroid.ui.components.ConnectivityBanner
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CorpusListScreen(
     viewModel: CorpusListViewModel,
@@ -56,21 +60,27 @@ fun CorpusListScreen(
                     modifier = Modifier.padding(16.dp)
                 )
             }
-            LazyColumn {
-                items(state.corpora, key = { it.id }) { corpus ->
-                    Card(
-                        modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 6.dp)
-                            .clickable { onOpenCorpus(corpus.id) }
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(corpus.name, style = MaterialTheme.typography.titleMedium)
-                            Text(
-                                "${corpus.documentCount} document(s)",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+            PullToRefreshBox(
+                isRefreshing = state.isRefreshing,
+                onRefresh = viewModel::refresh,
+                modifier = Modifier.weight(1f, fill = true).fillMaxWidth()
+            ) {
+                LazyColumn {
+                    items(state.corpora, key = { it.id }) { corpus ->
+                        Card(
+                            modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                                .clickable { onOpenCorpus(corpus.id) }
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(corpus.name, style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    "${corpus.documentCount} document(s)",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
                         }
                     }
                 }

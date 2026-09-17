@@ -100,6 +100,15 @@ class FakeQueryResultDao : QueryResultDao {
             flowFor(corpusId).value = flowFor(corpusId).value.filterNot { it.id == id }
         }
     }
+
+    override suspend fun markFailed(id: String) {
+        flows.keys.forEach { corpusId ->
+            flowFor(corpusId).value =
+                flowFor(corpusId).value.map {
+                    if (it.id == id) it.copy(syncState = QuerySyncState.FAILED) else it
+                }
+        }
+    }
 }
 
 class FakePendingQueryDao : PendingQueryDao {

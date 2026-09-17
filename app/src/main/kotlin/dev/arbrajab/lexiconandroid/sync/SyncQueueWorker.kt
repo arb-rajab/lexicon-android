@@ -9,6 +9,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import dev.arbrajab.lexiconandroid.LexiconApplication
+import dev.arbrajab.lexiconandroid.data.repository.ReplayResult
 
 /**
  * Drains the pending-query queue (oldest first) as soon as the network
@@ -25,16 +26,17 @@ class SyncQueueWorker(context: Context, params: WorkerParameters) :
         val pending = app.pendingQueryDao.getAll()
         if (pending.isEmpty()) return Result.success()
 
-        var allSucceeded = true
+        // A permanently-failed item (attempts capped in QueryRepository) is dequeued for good and
+        // must not keep this worker retrying — only an item that still has attempts left does.
+        var needsRetry = false
         for (item in pending) {
-            val succeeded = repository.replayPending(item)
-            allSucceeded = allSucceeded && succeeded
+            if (repository.replayPending(item) == ReplayResult.RETRYING) needsRetry = true
         }
         // Refresh corpus/document metadata too, so staleness flags settle in the same pass
         // that a user's queued questions actually got answered.
         runCatching { app.corpusRepository.refresh() }
 
-        return if (allSucceeded) Result.success() else Result.retry()
+        return if (needsRetry) Result.retry() else Result.success()
     }
 
     companion object {

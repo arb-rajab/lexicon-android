@@ -1,7 +1,7 @@
 # Testing Strategy
 
 > Project: lexicon-android (public)
-> Last updated: 2026-09-13
+> Last updated: 2026-09-17
 
 ## What's actually tested, and why
 
@@ -22,7 +22,10 @@ accordingly.
   - `replayPending` success → pending entry removed, placeholder replaced by
     the server-assigned row;
   - `replayPending` failure → `attempts` incremented, entry stays queued
-    (never silently dropped).
+    (never silently dropped) as long as attempts remain under the cap;
+  - `replayPending` failure once `QueryRepository.MAX_SYNC_ATTEMPTS` (5) is
+    reached → the pending entry is dequeued for good and the cached result
+    is marked `FAILED` instead of retrying forever (ADR-0006).
 - `CorpusRepositoryTest` — the staleness fingerprint
   (`computeCorpusFingerprint`): changes when document count changes, changes
   when a document's version changes, stable otherwise; plus a `refresh()`
@@ -39,13 +42,33 @@ runtime cost without covering anything a fake `Flow`-backed map doesn't.
 `ConnectivityBannerTest` covers the online/offline/syncing banner's three
 visible states via Compose UI testing (`createComposeRule`).
 
-**This environment has no Android emulator or connected device**, so these
-tests have been written against the real API but **not executed** in this
-session — there was no way to run `./gradlew connectedAndroidTest` here.
-Getting them running in CI (most realistically via a hosted-emulator GitHub
-Action such as `reactivecircus/android-emulator-runner`, which the current
-`android-ci.yml` does not yet include, or a real-device cloud lab) is tracked
-as a backlog item rather than silently skipped or claimed as passing.
+**This environment (both the original session and Session N) has no Android
+emulator or connected device**, so these tests have been written against the
+real API but have never been run **from this sandbox** — there is no way to
+run `./gradlew connectedAndroidTest` here (confirmed again in Session N: the
+local `./gradlew` invocation fails at plugin resolution because
+`dl.google.com` is unreachable from this environment, before it would even
+get to running an emulator).
+
+As of Session N, `.github/workflows/android-ci.yml` has an `instrumented-tests`
+job wired up (`reactivecircus/android-emulator-runner@v2`, API 30,
+`google_apis`/`x86_64`, `-no-window -gpu swiftshader_indirect`) that runs
+`connectedDebugAndroidTest` on GitHub's own `ubuntu-latest` runners. This is
+believed to work because GitHub enabled KVM hardware acceleration on
+GitHub-hosted Linux runners in February 2023 (see the GitHub changelog:
+"Hardware accelerated Android virtualization on Actions Windows and Linux
+larger hosted runners"), which is what `reactivecircus/android-emulator-runner`
+needs to boot an x86_64 emulator at usable speed — the job includes the
+standard "Enable KVM" udev-rule step this action's docs call for on Linux
+runners. **This has not been watched running to a green result from inside
+this sandbox** (same class of constraint as the original session's CI, and
+the same class of blocker bookslot-mobile hit with KVM — the difference here
+is that this session found a documented, non-fudged path around it rather
+than being stuck: GitHub's own Linux runners, unlike a from-scratch
+self-hosted or fully-virtualized environment, have that acceleration
+available). Whoever picks this up next should confirm the `instrumented-tests`
+job is actually green on the first real run and fix anything it surfaces —
+same standard as the rest of this project's CI story.
 
 ### What's not tested
 

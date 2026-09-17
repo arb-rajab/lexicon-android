@@ -80,7 +80,7 @@ private fun QueryResultCard(result: QueryResultEntity) {
                     )
                 QuerySyncState.FAILED ->
                     Text(
-                        "Failed to sync — will retry automatically",
+                        "Failed to sync after repeated attempts — ask again to retry",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )

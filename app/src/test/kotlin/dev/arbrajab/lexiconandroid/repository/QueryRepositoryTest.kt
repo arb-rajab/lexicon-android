@@ -5,6 +5,7 @@ import dev.arbrajab.lexiconandroid.data.local.entity.CorpusEntity
 import dev.arbrajab.lexiconandroid.data.local.entity.QuerySyncState
 import dev.arbrajab.lexiconandroid.data.remote.dto.QueryResponseDto
 import dev.arbrajab.lexiconandroid.data.repository.QueryRepository
+import dev.arbrajab.lexiconandroid.data.repository.ReplayResult
 import dev.arbrajab.lexiconandroid.data.repository.SubmitQueryOutcome
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -110,9 +111,9 @@ class QueryRepositoryTest {
             )
         }
 
-        val succeeded = repository.replayPending(queued.pending)
+        val result = repository.replayPending(queued.pending)
 
-        assertTrue(succeeded)
+        assertEquals(ReplayResult.SUCCESS, result)
         assertTrue(pendingQueryDao.getAll().isEmpty())
         val cached = queryResultDao.observeForCorpus(corpusId).value
         // The PENDING placeholder (keyed by localId) is replaced by the server-assigned row.
@@ -127,13 +128,36 @@ class QueryRepositoryTest {
         val queued = repository.submitQuery(corpusId, "Why?") as SubmitQueryOutcome.Queued
         api.askQuestionShouldFail = true
 
-        val succeeded = repository.replayPending(queued.pending)
+        val result = repository.replayPending(queued.pending)
 
-        assertFalse(succeeded)
+        assertEquals(ReplayResult.RETRYING, result)
         val remaining = pendingQueryDao.getAll()
         assertEquals(1, remaining.size)
         assertEquals(1, remaining.first().attempts)
+        val cached = queryResultDao.observeForCorpus(corpusId).value.first()
+        assertEquals(QuerySyncState.PENDING, cached.syncState)
     }
+
+    @Test
+    fun `replayPending gives up after MAX_SYNC_ATTEMPTS, dequeuing and marking the result FAILED`() =
+        runTest {
+            connectivity.state.value = ConnectivityState.OFFLINE
+            val queued = repository.submitQuery(corpusId, "Why?") as SubmitQueryOutcome.Queued
+            api.askQuestionShouldFail = true
+
+            var pending = queued.pending
+            var lastResult: ReplayResult? = null
+            repeat(QueryRepository.MAX_SYNC_ATTEMPTS) {
+                lastResult = repository.replayPending(pending)
+                pending = pendingQueryDao.getAll().firstOrNull() ?: pending
+            }
+
+            assertEquals(ReplayResult.PERMANENTLY_FAILED, lastResult)
+            assertTrue("pending entry should be dequeued for good", pendingQueryDao.getAll().isEmpty())
+            val cached = queryResultDao.observeForCorpus(corpusId).value
+            assertEquals(1, cached.size)
+            assertEquals(QuerySyncState.FAILED, cached.first().syncState)
+        }
 
     @Test
     fun `a cached synced result is marked possibly stale once the corpus fingerprint changes`() =
