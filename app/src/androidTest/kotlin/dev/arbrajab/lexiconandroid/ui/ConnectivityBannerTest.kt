@@ -1,8 +1,9 @@
 package dev.arbrajab.lexiconandroid.ui
 
-import androidx.compose.ui.test.assertDoesNotExist
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import dev.arbrajab.lexiconandroid.connectivity.ConnectivityState
 import dev.arbrajab.lexiconandroid.ui.components.ConnectivityBanner
@@ -10,12 +11,9 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * Instrumented Compose UI test. NOTE: this environment has no Android
- * emulator/device available to actually run `connectedAndroidTest` — see
- * `docs/project-memory/07-testing-strategy.md` and the backlog item tracking
- * getting this executing in CI (e.g. via a hosted emulator runner). The test
- * is written to the real contract so it's ready to run as soon as that's
- * wired up; it has not been executed in this session.
+ * Instrumented Compose UI test, now running for real on a hosted emulator in CI (see
+ * `.github/workflows/android-ci.yml`'s `instrumented-tests` job and
+ * `docs/project-memory/07-testing-strategy.md`).
  */
 class ConnectivityBannerTest {
     @get:Rule
@@ -45,6 +43,6 @@ class ConnectivityBannerTest {
             ConnectivityBanner(connectivityState = ConnectivityState.ONLINE, pendingCount = 0)
         }
 
-        composeTestRule.onNodeWithText("Offline — showing cached data").assertDoesNotExist()
+        composeTestRule.onAllNodesWithText("Offline — showing cached data").assertCountEquals(0)
     }
 }
