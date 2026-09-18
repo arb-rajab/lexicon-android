@@ -15,9 +15,10 @@ import org.junit.Test
 import retrofit2.HttpException
 
 /**
- * Round-trips real HTTP requests through [ApiClientFactory]/[dev.arbrajab.lexiconandroid.data.remote.LexiconApi]
- * against a [MockWebServer], catching serialization/URL-construction bugs that unit tests
- * faking the API interface directly can't (see backlog).
+ * Round-trips real HTTP requests through [ApiClientFactory] and
+ * [dev.arbrajab.lexiconandroid.data.remote.LexiconApi] against a [MockWebServer], catching
+ * serialization/URL-construction bugs that unit tests faking the API interface directly can't
+ * (see backlog).
  */
 class LexiconApiIntegrationTest {
     private lateinit var server: MockWebServer
@@ -95,7 +96,8 @@ class LexiconApiIntegrationTest {
             server.enqueue(
                 MockResponse().setResponseCode(200).setBody(
                     """
-                    {"id":"c/1","name":"Weird Id","created_at":"2026-01-01T00:00:00Z","document_count":2}
+                    {"id":"c/1","name":"Weird Id","created_at":"2026-01-01T00:00:00Z",
+                    "document_count":2}
                     """.trimIndent()
                 )
             )
