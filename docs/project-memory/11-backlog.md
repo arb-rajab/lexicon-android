@@ -1,31 +1,21 @@
 # Backlog
 
 > Project: lexicon-android (public)
-> Last updated: 2026-09-17
+> Last updated: 2026-09-18
 
 ## Near-term
 
-All three items tracked here as of Session N's handoff were completed in
-Session N+1:
-
-- **MockWebServer-based integration tests** for `LexiconApi`/`ApiClientFactory`
-  — done. `LexiconApiIntegrationTest` round-trips real HTTP requests through
-  `ApiClientFactory` against a `MockWebServer`, covering path/method
-  construction (including URL-encoding a corpus id containing `/`), request
-  body serialization, the configured static auth header being attached (and
-  absent when unconfigured), and a 4xx response surfacing as `HttpException`
-  rather than being swallowed.
-- **Pull-to-refresh on the document list within a corpus** (`QueryScreen`) —
-  done, via the same `PullToRefreshBox` + `CorpusRepository.refresh(corpusId)`
-  pattern `CorpusListScreen` already used.
-- **Per-corpus retry button for `FAILED` query results** — done.
-  `QueryRepository.retryFailed` drops the old permanently-failed row and
-  re-submits the same `questionText` through `submitQuery` (a fresh
-  `PENDING`/`SYNCED` outcome with `attempts` reset to 0, not a resurrection
-  of the failed one), wired to a "Retry" button on the `FAILED` card.
-
-Nothing is currently tracked as near-term backlog beyond the design gaps and
-explicitly-out-of-scope items below.
+Empty. The three items tracked as of Session N's handoff (MockWebServer
+integration tests, `QueryScreen` pull-to-refresh, a `FAILED`-result retry
+button) were completed in Session N+1, and — unlike every prior round of
+work on this project — actually confirmed green in CI, not just written and
+hoped for. See `12-session-handoff.md`'s Session N+1 entry for what CI's
+first real end-to-end run surfaced and how each issue was fixed (a wrong
+`PullToRefreshBox` import package, a stray import that shadowed an internal
+Compose symbol, ktlint formatting, and one genuinely wrong Compose-testing
+API reference in code that had never compiled before). Nothing is currently
+tracked as near-term backlog beyond the design gaps and explicitly-out-of-
+scope items below.
 
 ## Design gaps acknowledged, not solved
 
