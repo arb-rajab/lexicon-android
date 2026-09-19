@@ -12,11 +12,13 @@ import dev.arbrajab.lexiconandroid.data.local.entity.QuerySyncState
 import dev.arbrajab.lexiconandroid.data.remote.LexiconApi
 import dev.arbrajab.lexiconandroid.data.remote.dto.CitationDto
 import dev.arbrajab.lexiconandroid.data.remote.dto.QueryRequestDto
+import java.io.IOException
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import retrofit2.HttpException
 
 sealed interface SubmitQueryOutcome {
     data class Answered(val result: QueryResultEntity) : SubmitQueryOutcome
@@ -72,10 +74,15 @@ class QueryRepository(
         if (isOnline) {
             try {
                 return answerLive(corpusId, question)
-            } catch (_: java.io.IOException) {
+            } catch (_: IOException) {
                 // Network call itself failed (timeout, DNS, connection reset) despite the
                 // transport reporting "online" — fall through to queueing rather than
                 // surfacing a transient error for something the sync worker will retry.
+            } catch (_: HttpException) {
+                // Retrofit throws this (not IOException) for any non-2xx response — a real
+                // 4xx/5xx from the server. Fall through to queueing the same as a network
+                // failure so it goes through the same retry/backoff-cap path instead of
+                // crashing the caller.
             }
         }
         return queueOffline(corpusId, question)
@@ -172,20 +179,31 @@ class QueryRepository(
             queryResultDao.deleteById(pending.localId)
             pendingQueryDao.delete(pending)
             ReplayResult.SUCCESS
-        } catch (exc: java.io.IOException) {
-            val attempts = pending.attempts + 1
-            val lastError = exc.message ?: "network error"
-            if (attempts >= MAX_SYNC_ATTEMPTS) {
-                // Give up for good rather than retry silently forever (see backlog): dequeue and
-                // surface the failure on the cached PENDING placeholder so the user can see and
-                // re-ask it, instead of it looking "stuck" with no explanation.
-                pendingQueryDao.delete(pending)
-                queryResultDao.markFailed(pending.localId)
-                ReplayResult.PERMANENTLY_FAILED
-            } else {
-                pendingQueryDao.update(pending.copy(attempts = attempts, lastError = lastError))
-                ReplayResult.RETRYING
-            }
+        } catch (exc: IOException) {
+            handleReplayFailure(pending, exc.message ?: "network error")
+        } catch (exc: HttpException) {
+            // Retrofit throws this (not IOException) for any non-2xx response — a real 4xx/5xx
+            // from the server. Route it through the same attempt-counting/backoff-cap logic as
+            // a network failure instead of letting it crash the sync worker.
+            handleReplayFailure(pending, exc.message ?: "server error")
+        }
+    }
+
+    private suspend fun handleReplayFailure(
+        pending: PendingQueryEntity,
+        lastError: String
+    ): ReplayResult {
+        val attempts = pending.attempts + 1
+        return if (attempts >= MAX_SYNC_ATTEMPTS) {
+            // Give up for good rather than retry silently forever (see backlog): dequeue and
+            // surface the failure on the cached PENDING placeholder so the user can see and
+            // re-ask it, instead of it looking "stuck" with no explanation.
+            pendingQueryDao.delete(pending)
+            queryResultDao.markFailed(pending.localId)
+            ReplayResult.PERMANENTLY_FAILED
+        } else {
+            pendingQueryDao.update(pending.copy(attempts = attempts, lastError = lastError))
+            ReplayResult.RETRYING
         }
     }
 
