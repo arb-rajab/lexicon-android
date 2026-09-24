@@ -1,7 +1,58 @@
 # Session Handoff
 
 > Project: lexicon-android (public)
-> Last updated: 2026-09-18
+> Last updated: 2026-09-24
+
+## Session N+2: Permanent vs. transient HTTP error handling, stale auth-optional copy, dead code cleanup
+
+**What was wrong:** `QueryRepository.submitQuery`/`replayPending` caught
+`HttpException` (added in the prior crash-fix session) but treated every
+non-2xx response identically — retried through the same
+attempt-counting/backoff-cap path as a transient network blip. A 401/403
+(bad or missing auth header) or 422 (server permanently rejects the request
+body) will never succeed no matter how many times it's retried, so queries
+failing for those reasons sat in the offline queue silently retrying for
+hours (WorkManager's backoff caps around 5h across `MAX_SYNC_ATTEMPTS = 5`
+attempts) before finally surfacing as failed — wasted battery/network and a
+misleading "still trying" UI state the whole time.
+
+**Fix:** `QueryRepository.PERMANENT_HTTP_STATUS_CODES = {401, 403, 422}`.
+`submitQuery`'s live-call catch and `replayPending`'s catch both check
+`isPermanentFailure(exc)` first: a permanent status routes straight to a
+cached `FAILED` result (`SubmitQueryOutcome.Failed` / new — and
+`ReplayResult.PERMANENTLY_FAILED` — existing) on the very first attempt,
+without touching the offline queue or spending any of the attempt budget.
+429/5xx (rate limit / server trouble) are unchanged: transient, still
+retried through the existing capped backoff path. See
+`QueryRepositoryHttpExceptionTest` for MockWebServer-backed regression
+coverage of both classes, distinctly. ADR-0006 in `09-decision-log.md`
+updated to document the split.
+
+**Stale "optional" auth-header labeling:** ADR-0001 was written when lexicon
+had no auth at all; the prior session encrypted the auth-header value
+specifically because it's now a real credential. `ServerConfigScreen`'s
+field labels and body copy still said "(optional)" — updated to drop that
+framing (see ADR-0001's "Update" note for the actual reasoning: real
+self-hosted deployments need it, but the field still isn't form-validated
+as non-blank, since a no-auth deployment is still a valid shape).
+`ServerConfigStore`'s doc comment and `README.md` updated to match.
+
+**Cleanup:** Removed `LexiconApi.createCorpus` and its `CorpusCreateRequest`
+DTO — dead code contradicting ADR-0002's consumer-only scope (this app never
+calls it; the fake in `FakeSupport.kt` just stubbed it with `error(...)`).
+Bumped `androidx.security:security-crypto` from `1.1.0-alpha06` to the
+stable `1.1.0` release (verified via Android's release notes) — same
+`MasterKey`/`EncryptedSharedPreferences` API surface used by
+`ServerConfigStore`, so a drop-in version bump, not a rewrite. (Note: as of
+`1.1.0-beta01` Google deprecated the whole `security-crypto` API surface in
+favor of platform Keystore APIs directly — not addressed this session, since
+that's a real migration, not a version bump; left for a future session if
+picked up.)
+
+**Environment constraint (unchanged from prior sessions):** no path to
+`dl.google.com` in this sandbox, so none of this was compiled locally —
+CI is the first real compile, same as every prior session. If CI is red,
+start there.
 
 ## Session N+1: CI actually verified green, MockWebServer tests, QueryScreen pull-to-refresh, retry button
 

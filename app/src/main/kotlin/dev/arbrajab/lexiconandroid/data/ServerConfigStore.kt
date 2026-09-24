@@ -47,10 +47,11 @@ data class ServerConfig(
  * instance-level auth is a deployment concern, not a designed mechanism, and
  * the backend ships with no auth middleware at all (see ADR-0001). So rather
  * than fabricate a login screen against endpoints that don't exist, the app
- * asks the user for a server URL plus an optional static header (name +
- * value) they configure themselves — matching whatever their deployment's
- * reverse proxy or hosting environment actually enforces (basic auth
- * translated to a header, an API gateway token, or nothing at all).
+ * asks the user for a server URL plus a static header (name + value) they
+ * configure themselves — matching whatever their deployment's reverse proxy
+ * or hosting environment actually enforces (basic auth translated to a
+ * header, an API gateway token, or nothing at all if the deployment truly
+ * has none).
  */
 class ServerConfigStore(private val context: Context) {
     private val keyBaseUrl = stringPreferencesKey("base_url")

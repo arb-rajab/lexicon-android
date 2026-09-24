@@ -9,9 +9,9 @@ push-notification demo.
 
 ## What it does
 
-- Connects to a self-hosted lexicon deployment (server URL + optional auth
-  header — see [ADR-0001](docs/project-memory/09-decision-log.md) for why
-  there's no login screen).
+- Connects to a self-hosted lexicon deployment (server URL + auth header —
+  see [ADR-0001](docs/project-memory/09-decision-log.md) for why there's no
+  login screen).
 - Lists corpora and documents, caching their metadata locally with Room.
 - Lets you ask questions against a corpus and caches every answer (or
   refusal) it gets back.

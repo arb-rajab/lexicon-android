@@ -3,7 +3,6 @@ package dev.arbrajab.lexiconandroid.repository
 import dev.arbrajab.lexiconandroid.connectivity.ConnectivityObserver
 import dev.arbrajab.lexiconandroid.connectivity.ConnectivityState
 import dev.arbrajab.lexiconandroid.data.remote.LexiconApi
-import dev.arbrajab.lexiconandroid.data.remote.dto.CorpusCreateRequest
 import dev.arbrajab.lexiconandroid.data.remote.dto.CorpusDetailDto
 import dev.arbrajab.lexiconandroid.data.remote.dto.CorpusDto
 import dev.arbrajab.lexiconandroid.data.remote.dto.DocumentDto
@@ -38,9 +37,6 @@ class FakeLexiconApi(
         private set
 
     override suspend fun listCorpora(): List<CorpusDto> = corpora
-
-    override suspend fun createCorpus(request: CorpusCreateRequest): CorpusDto =
-        error("not used in these tests")
 
     override suspend fun getCorpus(corpusId: String): CorpusDetailDto =
         corpusDetails.getValue(corpusId)
