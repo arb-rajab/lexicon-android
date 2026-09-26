@@ -1,7 +1,34 @@
 # Session Handoff
 
 > Project: lexicon-android (public)
-> Last updated: 2026-09-24
+> Last updated: 2026-09-26
+
+## Session N+3: Investigated auth "enforcement gap" — confirmed intentional, no code change
+
+**What was flagged:** `ServerConfigScreen`'s Save button only requires a
+non-blank base URL, and `StaticHeaderInterceptor` silently omits the auth
+header (rather than failing) when it's blank, so the app fully functions
+with zero auth configured — flagged as possibly contradicting Session N+2's
+"auth is realistically required, not optional" copy update to ADR-0001.
+
+**What was found:** This is not an oversight. ADR-0001's "Update" note
+(Session N+2) already explicitly decided against form-level enforcement,
+for a stated reason that's still valid: a deployment with no reverse-proxy/
+gateway auth in front of it (e.g. private-network-only) is a real, supported
+configuration, not just a hypothetical one. Neither the ADR nor
+`ServerConfigScreen`'s copy claims auth is unconditionally mandatory —
+the wording is "realistically required" for the common case, with the
+lack of enforcement called out in the same paragraph. `LexiconApiIntegrationTest`
+already has a regression test (`` `no auth header is sent when none is
+configured` ``) that pins this exact behavior as intentional.
+
+**Action taken:** No enforcement added to `ServerConfigScreen` or
+`StaticHeaderInterceptor`, and no ADR/UI copy changed — both already
+accurately describe the intentional behavior. Added a "Reaffirmed
+(Session N+3)" note to ADR-0001 in `09-decision-log.md` so a future session
+that notices the same thing doesn't re-investigate it as a regression a
+third time. The permanent-vs-transient HTTP error handling from Session N+2
+was left untouched, as it's correct and unrelated to this question.
 
 ## Session N+2: Permanent vs. transient HTTP error handling, stale auth-optional copy, dead code cleanup
 
