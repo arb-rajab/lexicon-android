@@ -25,9 +25,6 @@ data class CorpusDetailDto(
 )
 
 @Serializable
-data class CorpusCreateRequest(val name: String)
-
-@Serializable
 data class DocumentDto(
     val id: String,
     @SerialName("source_filename") val sourceFilename: String,

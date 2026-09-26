@@ -3,9 +3,9 @@
 > Project: lexicon-android (public)
 > Last updated: 2026-09-17
 
-## ADR-0001: No login screen — server URL + optional static header instead
+## ADR-0001: No login screen — server URL + static header instead
 
-**Status:** Accepted
+**Status:** Accepted (auth model updated post-Session N — see "Update" below)
 
 **Context:** The task for this app assumed it would "authenticate against
 lexicon's existing API." Reading lexicon's actual
@@ -18,13 +18,26 @@ this session's checkout. The API contract doc says this explicitly:
 designed in this session."
 
 **Decision:** This app does not implement a login flow against endpoints
-that don't exist. Instead, `ServerConfigScreen` collects a base URL and an
-optional single static HTTP header (name + value), stored via DataStore
-(`ServerConfigStore`) and attached to every request by
-`StaticHeaderInterceptor`. This covers the realistic self-hosted deployment
-shapes: a reverse proxy doing HTTP basic auth translated to a header, an API
-gateway requiring a static token, or nothing at all if the deployment is
-only reachable on a private network.
+that don't exist. Instead, `ServerConfigScreen` collects a base URL and a
+single static HTTP header (name + value), stored via DataStore/
+`EncryptedSharedPreferences` (`ServerConfigStore`) and attached to every
+request by `StaticHeaderInterceptor`. This covers the realistic self-hosted
+deployment shapes: a reverse proxy doing HTTP basic auth translated to a
+header, an API gateway requiring a static token, or nothing at all if the
+deployment is only reachable on a private network.
+
+**Update (post-Session N):** Real self-hosted deployments put this app
+behind a reverse proxy or gateway that rejects unauthenticated requests, so
+the header is realistically required for the app to work at all, not an
+optional extra — `ServerConfigScreen`'s copy and field labels were updated
+to stop calling it "optional." `QueryRepository` also now treats a
+401/403/422 response as a permanent failure (see ADR-0006) rather than
+retrying it as if it were a transient outage, since a missing or rejected
+auth header will never start working just because the sync worker waited.
+The header field itself is still not enforced as non-blank at the form
+level — a deployment with no auth in front of it is still a valid, if
+less common, shape — so this is a copy/error-handling correction, not a
+new validation requirement.
 
 **Consequences:** If lexicon ever grows real instance-level auth (its own
 docs flag this as a known future decision), this app's `ServerConfigStore`
@@ -177,9 +190,17 @@ against real-world failure/retry timing data (this project has no
 production traffic to tune it against) — revisit if it proves too
 aggressive (legitimate transient outages longer than WorkManager's backoff
 window across 5 attempts) or too lax (users see "stuck" queries for too
-long before they're marked failed). The cap intentionally doesn't
-distinguish *why* a call keeps failing (permanent 4xx-shaped failure vs.
-prolonged connectivity loss) — `QueryRepository.submitQuery`/`replayPending`
-only ever catch `IOException`, so an HTTP error response the server returns
-(as opposed to a transport-level failure) was never retried in the first
-place and this ADR doesn't change that.
+long before they're marked failed).
+
+**Update (post-Session N):** `QueryRepository.submitQuery`/`replayPending`
+now also catch `HttpException` (see the crash fix earlier in Session N) and,
+as of this update, no longer treat every HTTP error identically. A 401, 403,
+or 422 response is a **permanent** failure — bad/missing auth, or a request
+the server will never accept — and is routed straight to `FAILED`
+(`SubmitQueryOutcome.Failed` / `ReplayResult.PERMANENTLY_FAILED`) on the
+first attempt, without spending any of the `MAX_SYNC_ATTEMPTS` budget or
+sitting in the offline queue waiting for a retry that can never succeed.
+A 429 or 5xx response is still treated as **transient** and goes through the
+existing attempt-counting/backoff-cap path unchanged. See
+`QueryRepository.PERMANENT_HTTP_STATUS_CODES` and
+`QueryRepositoryHttpExceptionTest` for the regression coverage.

@@ -20,8 +20,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 /**
  * lexicon v1 has no login of its own (see ADR-0001 / ServerConfigStore) so
- * this screen collects a server URL and an optional static header instead of
- * a username/password form.
+ * this screen collects a server URL and a static header instead of a
+ * username/password form. Most real self-hosted deployments sit behind a
+ * reverse proxy or gateway that rejects unauthenticated requests, so the
+ * header is realistically required, not an optional extra.
  */
 @Composable
 fun ServerConfigScreen(viewModel: ServerConfigViewModel, onContinue: () -> Unit) {
@@ -34,8 +36,9 @@ fun ServerConfigScreen(viewModel: ServerConfigViewModel, onContinue: () -> Unit)
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                "lexicon has no built-in login in v1 — enter your deployment's URL and, " +
-                    "if your operator requires one, an auth header.",
+                "lexicon has no built-in login in v1 — enter your deployment's URL and the " +
+                    "auth header your operator requires (most self-hosted deployments sit " +
+                    "behind a proxy or gateway that needs one).",
                 style = MaterialTheme.typography.bodyMedium
             )
             OutlinedTextField(
@@ -49,7 +52,7 @@ fun ServerConfigScreen(viewModel: ServerConfigViewModel, onContinue: () -> Unit)
             OutlinedTextField(
                 value = config.authHeaderName,
                 onValueChange = viewModel::onHeaderNameChanged,
-                label = { Text("Auth header name (optional)") },
+                label = { Text("Auth header name") },
                 placeholder = { Text("Authorization") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -57,7 +60,7 @@ fun ServerConfigScreen(viewModel: ServerConfigViewModel, onContinue: () -> Unit)
             OutlinedTextField(
                 value = config.authHeaderValue,
                 onValueChange = viewModel::onHeaderValueChanged,
-                label = { Text("Auth header value (optional)") },
+                label = { Text("Auth header value") },
                 placeholder = { Text("Bearer …") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true

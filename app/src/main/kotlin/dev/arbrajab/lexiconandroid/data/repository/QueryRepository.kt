@@ -23,6 +23,13 @@ import retrofit2.HttpException
 sealed interface SubmitQueryOutcome {
     data class Answered(val result: QueryResultEntity) : SubmitQueryOutcome
     data class Queued(val pending: PendingQueryEntity) : SubmitQueryOutcome
+
+    /**
+     * The live call failed with a permanent HTTP error (401/403/422 — see
+     * [isPermanentFailure]) that will never succeed on retry. Cached immediately as FAILED
+     * rather than queued for the sync worker to retry for hours.
+     */
+    data class Failed(val result: QueryResultEntity) : SubmitQueryOutcome
 }
 
 /** Outcome of one [QueryRepository.replayPending] attempt. */
@@ -78,11 +85,15 @@ class QueryRepository(
                 // Network call itself failed (timeout, DNS, connection reset) despite the
                 // transport reporting "online" — fall through to queueing rather than
                 // surfacing a transient error for something the sync worker will retry.
-            } catch (_: HttpException) {
+            } catch (exc: HttpException) {
                 // Retrofit throws this (not IOException) for any non-2xx response — a real
-                // 4xx/5xx from the server. Fall through to queueing the same as a network
-                // failure so it goes through the same retry/backoff-cap path instead of
-                // crashing the caller.
+                // 4xx/5xx from the server. A permanent failure (bad/missing auth, or a request
+                // the server will never accept) will never succeed on retry, so it's cached as
+                // FAILED immediately rather than queued into the retry/backoff-cap path.
+                if (isPermanentFailure(exc)) {
+                    val failed = cacheImmediatelyFailedResult(corpusId, question)
+                    return SubmitQueryOutcome.Failed(failed)
+                }
             }
         }
         return queueOffline(corpusId, question)
@@ -109,6 +120,31 @@ class QueryRepository(
             }
         )
         return SubmitQueryOutcome.Answered(result)
+    }
+
+    private suspend fun cacheImmediatelyFailedResult(
+        corpusId: String,
+        question: String
+    ): QueryResultEntity {
+        val now = System.currentTimeMillis()
+        val result =
+            QueryResultEntity(
+                id = UUID.randomUUID().toString(),
+                corpusId = corpusId,
+                questionText = question,
+                answered = false,
+                answerText = null,
+                refusalReason = null,
+                retrievedChunkCount = 0,
+                citationsJson = "[]",
+                createdAt = now,
+                cachedAt = now,
+                syncState = QuerySyncState.FAILED,
+                possiblyStale = false,
+                corpusFingerprint = currentFingerprint(corpusId)
+            )
+        queryResultDao.upsert(result)
+        return result
     }
 
     private suspend fun queueOffline(
@@ -182,10 +218,19 @@ class QueryRepository(
         } catch (exc: IOException) {
             handleReplayFailure(pending, exc.message ?: "network error")
         } catch (exc: HttpException) {
-            // Retrofit throws this (not IOException) for any non-2xx response — a real 4xx/5xx
-            // from the server. Route it through the same attempt-counting/backoff-cap logic as
-            // a network failure instead of letting it crash the sync worker.
-            handleReplayFailure(pending, exc.message ?: "server error")
+            // Retrofit throws this (not IOException) for any non-2xx response. A permanent
+            // failure (bad/missing auth, or a request the server will never accept) is given up
+            // on immediately rather than burning through the attempt-count cap first — it will
+            // never succeed no matter how many times WorkManager retries it. Everything else
+            // (429/5xx — transient) still goes through the existing attempt-counting/backoff-cap
+            // logic.
+            if (isPermanentFailure(exc)) {
+                pendingQueryDao.delete(pending)
+                queryResultDao.markFailed(pending.localId)
+                ReplayResult.PERMANENTLY_FAILED
+            } else {
+                handleReplayFailure(pending, exc.message ?: "server error")
+            }
         }
     }
 
@@ -257,5 +302,18 @@ class QueryRepository(
          * query surfaced as failed.
          */
         const val MAX_SYNC_ATTEMPTS = 5
+
+        /**
+         * HTTP status codes that will never succeed on retry: 401/403 mean the configured auth
+         * header is missing or rejected (retrying with the same credentials just repeats the
+         * failure), and 422 means the server rejected the request body itself (e.g. a malformed
+         * question) — no amount of waiting changes either outcome. Contrast with 429 (rate
+         * limit) and 5xx (server-side trouble), which are transient and still go through the
+         * normal retry/backoff-cap path.
+         */
+        private val PERMANENT_HTTP_STATUS_CODES = setOf(401, 403, 422)
+
+        private fun isPermanentFailure(exc: HttpException): Boolean =
+            exc.code() in PERMANENT_HTTP_STATUS_CODES
     }
 }

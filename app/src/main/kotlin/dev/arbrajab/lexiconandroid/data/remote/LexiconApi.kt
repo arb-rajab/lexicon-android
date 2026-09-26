@@ -1,6 +1,5 @@
 package dev.arbrajab.lexiconandroid.data.remote
 
-import dev.arbrajab.lexiconandroid.data.remote.dto.CorpusCreateRequest
 import dev.arbrajab.lexiconandroid.data.remote.dto.CorpusDetailDto
 import dev.arbrajab.lexiconandroid.data.remote.dto.CorpusDto
 import dev.arbrajab.lexiconandroid.data.remote.dto.DocumentDto
@@ -20,9 +19,6 @@ import retrofit2.http.Path
 interface LexiconApi {
     @GET("api/v1/corpora")
     suspend fun listCorpora(): List<CorpusDto>
-
-    @POST("api/v1/corpora")
-    suspend fun createCorpus(@Body request: CorpusCreateRequest): CorpusDto
 
     @GET("api/v1/corpora/{corpusId}")
     suspend fun getCorpus(@Path("corpusId") corpusId: String): CorpusDetailDto
