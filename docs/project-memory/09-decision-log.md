@@ -45,6 +45,22 @@ and `StaticHeaderInterceptor` are the two places to extend — likely into a
 proper login screen storing a session token instead of a user-typed static
 header. No other part of the app assumes anything about the auth mechanism.
 
+**Reaffirmed (Session N+3):** Re-investigated as a suspected regression — the
+Save button on `ServerConfigScreen` accepts a blank auth header, and
+`StaticHeaderInterceptor` silently omits the header and proceeds when it's
+blank, which on the surface looks like it contradicts "the header is
+realistically required." It doesn't: the "Update" note above already
+considered and rejected form-level enforcement, for the reason stated
+there — a deployment with no proxy/gateway auth in front of it is a real,
+supported shape (e.g. a private-network-only deployment), not just a
+theoretical one, and neither the ADR text nor the `ServerConfigScreen` copy
+claims auth is unconditionally mandatory (it says "realistically required"
+for the common case, with the non-enforcement explicit). `LexiconApiIntegrationTest`'s
+`` `no auth header is sent when none is configured` `` test already locks in
+this exact behavior as intentional, not an untested gap. No enforcement was
+added and no doc language needed correcting; this note exists so a future
+session doesn't re-litigate the same non-bug a third time.
+
 ## ADR-0002: Consumer query client only — no admin surface
 
 **Status:** Accepted
