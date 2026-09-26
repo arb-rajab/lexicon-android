@@ -75,37 +75,35 @@ class QueryRepositoryHttpExceptionTest {
     }
 
     @Test
-    fun `submitQuery on a real 422 response fails immediately instead of queueing for retry`() =
-        runTest {
-            server.enqueue(
-                MockResponse().setResponseCode(422).setBody(
-                    """{"error":{"code":"invalid_question","message":"too short"}}"""
-                )
+    fun `submitQuery on a real 422 response fails immediately, not queued for retry`() = runTest {
+        server.enqueue(
+            MockResponse().setResponseCode(422).setBody(
+                """{"error":{"code":"invalid_question","message":"too short"}}"""
             )
+        )
 
-            val outcome = repository.submitQuery(corpusId, "?")
+        val outcome = repository.submitQuery(corpusId, "?")
 
-            // A malformed question will 422 on every retry too — queueing it would just burn
-            // through MAX_SYNC_ATTEMPTS for a guaranteed outcome, so it's cached FAILED right away
-            // and never touches the offline queue.
-            check(outcome is SubmitQueryOutcome.Failed)
-            assertTrue(pendingQueryDao.getAll().isEmpty())
-            val cached = queryResultDao.observeForCorpus(corpusId).value
-            assertEquals(QuerySyncState.FAILED, cached.first().syncState)
-        }
+        // A malformed question will 422 on every retry too — queueing it would just burn
+        // through MAX_SYNC_ATTEMPTS for a guaranteed outcome, so it's cached FAILED right away
+        // and never touches the offline queue.
+        check(outcome is SubmitQueryOutcome.Failed)
+        assertTrue(pendingQueryDao.getAll().isEmpty())
+        val cached = queryResultDao.observeForCorpus(corpusId).value
+        assertEquals(QuerySyncState.FAILED, cached.first().syncState)
+    }
 
     @Test
-    fun `submitQuery on a real 401 response fails immediately instead of queueing for retry`() =
-        runTest {
-            server.enqueue(MockResponse().setResponseCode(401).setBody("unauthorized"))
+    fun `submitQuery on a real 401 response fails immediately, not queued for retry`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(401).setBody("unauthorized"))
 
-            val outcome = repository.submitQuery(corpusId, "Why?")
+        val outcome = repository.submitQuery(corpusId, "Why?")
 
-            check(outcome is SubmitQueryOutcome.Failed)
-            assertTrue(pendingQueryDao.getAll().isEmpty())
-            val cached = queryResultDao.observeForCorpus(corpusId).value
-            assertEquals(QuerySyncState.FAILED, cached.first().syncState)
-        }
+        check(outcome is SubmitQueryOutcome.Failed)
+        assertTrue(pendingQueryDao.getAll().isEmpty())
+        val cached = queryResultDao.observeForCorpus(corpusId).value
+        assertEquals(QuerySyncState.FAILED, cached.first().syncState)
+    }
 
     @Test
     fun `replayPending does not crash on a real 5xx response and keeps retrying`() = runTest {
@@ -147,23 +145,22 @@ class QueryRepositoryHttpExceptionTest {
     }
 
     @Test
-    fun `replayPending gives up immediately on a 403, without spending any attempts`() =
-        runTest {
-            connectivity.state.value = ConnectivityState.OFFLINE
-            val queued = repository.submitQuery(corpusId, "Why?") as SubmitQueryOutcome.Queued
-            server.enqueue(MockResponse().setResponseCode(403).setBody("forbidden"))
+    fun `replayPending gives up immediately on a 403, spending no attempts`() = runTest {
+        connectivity.state.value = ConnectivityState.OFFLINE
+        val queued = repository.submitQuery(corpusId, "Why?") as SubmitQueryOutcome.Queued
+        server.enqueue(MockResponse().setResponseCode(403).setBody("forbidden"))
 
-            val result = repository.replayPending(queued.pending)
+        val result = repository.replayPending(queued.pending)
 
-            // Unlike a transient 5xx, a 403 is given up on on the very first attempt — the
-            // configured auth header will never start working just because the sync worker waited.
-            assertEquals(ReplayResult.PERMANENTLY_FAILED, result)
-            assertTrue(
-                "pending entry should be dequeued for good",
-                pendingQueryDao.getAll().isEmpty()
-            )
-            val cached = queryResultDao.observeForCorpus(corpusId).value
-            assertEquals(1, cached.size)
-            assertEquals(QuerySyncState.FAILED, cached.first().syncState)
-        }
+        // Unlike a transient 5xx, a 403 is given up on on the very first attempt — the
+        // configured auth header will never start working just because the sync worker waited.
+        assertEquals(ReplayResult.PERMANENTLY_FAILED, result)
+        assertTrue(
+            "pending entry should be dequeued for good",
+            pendingQueryDao.getAll().isEmpty()
+        )
+        val cached = queryResultDao.observeForCorpus(corpusId).value
+        assertEquals(1, cached.size)
+        assertEquals(QuerySyncState.FAILED, cached.first().syncState)
+    }
 }
