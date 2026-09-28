@@ -1,7 +1,7 @@
 # Backlog
 
 > Project: lexicon-android (public)
-> Last updated: 2026-09-18
+> Last updated: 2026-09-28
 
 ## Near-term
 
@@ -16,6 +16,22 @@ Compose symbol, ktlint formatting, and one genuinely wrong Compose-testing
 API reference in code that had never compiled before). Nothing is currently
 tracked as near-term backlog beyond the design gaps and explicitly-out-of-
 scope items below.
+
+## Admin-only, not actionable by any automated session
+
+- [ ] **Branch protection on `main` is unset.** GitHub reports
+      `"protected": false` on the default branch — no rule requires
+      `lint-and-test` or `instrumented-tests` (both real correctness/
+      regression-bearing jobs in `android-ci.yml`) to pass before a PR
+      merges. No tool available to any session using this portfolio's
+      GitHub MCP tooling can read or write branch-protection settings (no
+      such endpoint is exposed, and raw REST/`gh`-CLI fallback is out of
+      policy). Fix: repo admin → Settings → Branches → add a rule for
+      `main` → require status checks `lint-and-test` and
+      `instrumented-tests` → (recommended) require a pull request before
+      merging. See `12-session-handoff.md`'s Session N+4 entry for the full
+      audit. Neither job is path-filtered, so this carries no risk of
+      blocking unrelated PRs.
 
 ## Design gaps acknowledged, not solved
 
