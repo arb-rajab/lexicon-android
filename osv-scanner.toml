@@ -1,0 +1,96 @@
+# osv-scanner policy for app/gradle.lockfile (see .github/workflows/security.yml).
+#
+# Every entry below is a known advisory in a package that lives ONLY in build/test tooling
+# (ktlint, AGP's Unified Test Platform, ksp, Robolectric) and is absent from every
+# release/debug compile+runtime classpath, i.e. it is not in the shipped APK. They are pinned
+# by AGP/ktlint/Robolectric, so they clear when those tools are bumped (Dependabot).
+# Matching is exact name+version, so a new version or any new package is still reported, and
+# each entry expires so it has to be re-justified rather than silently ignored forever.
+
+[[PackageOverrides]]
+name = "ch.qos.logback:logback-core"
+version = "1.3.14"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "ktlint tooling only (ktlint Gradle configuration); never packaged into the APK."
+
+[[PackageOverrides]]
+name = "com.google.guava:guava"
+version = "31.1-jre"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "Build/test tooling only (ksp processor and unit-test classpaths); never packaged into the APK."
+
+[[PackageOverrides]]
+name = "com.google.protobuf:protobuf-java"
+version = "3.22.3"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP Unified Test Platform (instrumented-test host tooling) only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "commons-io:commons-io"
+version = "2.13.0"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP Unified Test Platform (instrumented-test host tooling) only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "org.bouncycastle:bcprov-jdk18on"
+version = "1.78.1"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "Transitive of Robolectric on the unit-test classpath only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "io.netty:netty-codec"
+version = "4.1.93.Final"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP Unified Test Platform (instrumented-test host tooling) only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "io.netty:netty-codec-http"
+version = "4.1.93.Final"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP Unified Test Platform (instrumented-test host tooling) only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "io.netty:netty-codec-http2"
+version = "4.1.93.Final"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP Unified Test Platform (instrumented-test host tooling) only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "io.netty:netty-common"
+version = "4.1.93.Final"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP Unified Test Platform (instrumented-test host tooling) only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "io.netty:netty-handler"
+version = "4.1.93.Final"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP Unified Test Platform (instrumented-test host tooling) only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "io.netty:netty-handler-proxy"
+version = "4.1.93.Final"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP Unified Test Platform (instrumented-test host tooling) only; never packaged into the APK."

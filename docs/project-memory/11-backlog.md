@@ -19,19 +19,21 @@ scope items below.
 
 ## Admin-only, not actionable by any automated session
 
-- [ ] **Branch protection on `main` is unset.** GitHub reports
-      `"protected": false` on the default branch — no rule requires
-      `lint-and-test` or `instrumented-tests` (both real correctness/
-      regression-bearing jobs in `android-ci.yml`) to pass before a PR
-      merges. No tool available to any session using this portfolio's
-      GitHub MCP tooling can read or write branch-protection settings (no
-      such endpoint is exposed, and raw REST/`gh`-CLI fallback is out of
-      policy). Fix: repo admin → Settings → Branches → add a rule for
-      `main` → require status checks `lint-and-test` and
-      `instrumented-tests` → (recommended) require a pull request before
-      merging. See `12-session-handoff.md`'s Session N+4 entry for the full
-      audit. Neither job is path-filtered, so this carries no risk of
-      blocking unrelated PRs.
+- [ ] **Add the security checks to `main`'s required status checks.**
+      `main` is now protected (set by the repo owner after the Session N+4
+      audit found it unprotected): PR required, "require branches to be up to
+      date", administrators not exempt, and status checks `lint-and-test` and
+      `instrumented-tests (30)` required. Still to add under Settings →
+      Branches → the `main` rule → required status checks (admin-only; no
+      session tooling can read or write this): `Secret scan (gitleaks)`,
+      `CodeQL (java-kotlin)`, `Dependency scan (osv-scanner)` (all from
+      `.github/workflows/security.yml`; none are path-filtered). NOTE: the
+      required names match the job `name:` values in `android-ci.yml`
+      exactly — renaming those jobs un-requires the check and blocks every
+      merge until the rule is updated (this happened once while adding the
+      security workflow). Optional hardening discussed but not enabled:
+      required approvals, CODEOWNERS on `.github/workflows/` and
+      `osv-scanner.toml`, code-owner review.
 
 ## Design gaps acknowledged, not solved
 
