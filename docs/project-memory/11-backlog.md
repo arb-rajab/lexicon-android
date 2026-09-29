@@ -21,14 +21,17 @@ scope items below.
 
 - [ ] **Branch protection on `main` is unset.** GitHub reports
       `"protected": false` on the default branch — no rule requires
-      `lint-and-test` or `instrumented-tests` (both real correctness/
-      regression-bearing jobs in `android-ci.yml`) to pass before a PR
+      "Lint and unit tests" or "Instrumented tests (API 30)" (both real
+      correctness/regression-bearing jobs in `android-ci.yml`; job ids
+      `lint-and-test` / `instrumented-tests`) nor any of the "Security"
+      workflow's checks ("Secret scan (gitleaks)", "CodeQL (java-kotlin)",
+      "Dependency scan (osv-scanner)") to pass before a PR
       merges. No tool available to any session using this portfolio's
       GitHub MCP tooling can read or write branch-protection settings (no
       such endpoint is exposed, and raw REST/`gh`-CLI fallback is out of
       policy). Fix: repo admin → Settings → Branches → add a rule for
-      `main` → require status checks `lint-and-test` and
-      `instrumented-tests` → (recommended) require a pull request before
+      `main` → require the status checks named above (GitHub matches on
+      the job `name:`, not the id) → (recommended) require a pull request before
       merging. See `12-session-handoff.md`'s Session N+4 entry for the full
       audit. Neither job is path-filtered, so this carries no risk of
       blocking unrelated PRs.

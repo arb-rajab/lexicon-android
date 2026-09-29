@@ -3,6 +3,25 @@
 > Project: lexicon-android (public)
 > Last updated: 2026-09-28
 
+## Session N+5: Security scanning added to CI
+
+**What was added:** `.github/workflows/security.yml` (push/PR to `main` plus a
+weekly cron) with three jobs — `secret-scan` (gitleaks, full history),
+`codeql` (java-kotlin, `build-mode: manual` around a `--rerun-tasks
+--no-build-cache` `assembleDebug` so CodeQL's tracer actually sees compilation)
+and `dependency-scan` (osv-scanner against `app/gradle.lockfile`).
+`.github/dependabot.yml` covers `gradle` and `github-actions` weekly.
+Every job in both workflows now has an explicit `name:`.
+
+**Dependency locking:** the repo had no committed lockfile, so
+`dependencyLocking { lockAllConfigurations() }` was enabled in
+`app/build.gradle.kts` and `app/gradle.lockfile` committed. Regenerate after
+any dependency change with `./gradlew :app:dependencies --write-locks` (CI
+fails on drift, which is intended). Build-script/plugin classpath is not locked.
+
+**Check names changed:** the required-check names an admin must select are now
+the job `name:` values, not the ids — see `11-backlog.md`.
+
 ## Session N+4: Branch-protection / required-status-check audit — gap found, cannot be fixed by any session's tooling
 
 **What was checked:** Confirmed the default branch is `main` (only branch
