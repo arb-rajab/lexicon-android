@@ -11,7 +11,9 @@ permissions:
 
 jobs:
   lint-and-test:
-    name: Lint and unit tests
+    # Explicit names are load-bearing: main's branch protection requires these exact check
+    # contexts, so changing them silently un-requires (and blocks merges on) the check.
+    name: lint-and-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +60,8 @@ jobs:
   # docs/project-memory/07-testing-strategy.md for why this was previously unverified
   # and what confirmed it's viable here.
   instrumented-tests:
-    name: Instrumented tests (API ${{ matrix.api-level }})
+    # Must render as "instrumented-tests (30)" — see the note on lint-and-test above.
+    name: instrumented-tests (${{ matrix.api-level }})
     runs-on: ubuntu-latest
     strategy:
       matrix:

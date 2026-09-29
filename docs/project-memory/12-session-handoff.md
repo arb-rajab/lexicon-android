@@ -19,8 +19,13 @@ Every job in both workflows now has an explicit `name:`.
 any dependency change with `./gradlew :app:dependencies --write-locks` (CI
 fails on drift, which is intended). Build-script/plugin classpath is not locked.
 
-**Check names changed:** the required-check names an admin must select are now
-the job `name:` values, not the ids — see `11-backlog.md`.
+**Check names are load-bearing:** `main`'s branch protection (added by the
+repo owner after Session N+4) requires the checks `lint-and-test` and
+`instrumented-tests (30)`. The workflow's explicit job `name:` values are
+therefore exactly those strings; an initial version renamed them to
+friendlier names and the PR became unmergeable ("expected" checks never
+reported) until they were restored. The three new security checks are not
+yet required — see `11-backlog.md`.
 
 ## Session N+4: Branch-protection / required-status-check audit — gap found, cannot be fixed by any session's tooling
 
