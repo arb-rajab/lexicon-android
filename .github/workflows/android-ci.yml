@@ -25,7 +25,7 @@ jobs:
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           # The action's default `packages` input ("tools platform-tools") includes the
           # legacy "Android SDK Tools" package, which Google has removed from the SDK
@@ -76,7 +76,7 @@ jobs:
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           # See the lint-and-test job's identical step for why: the action's default
           # `packages` input requests the now-removed legacy "tools" package.
