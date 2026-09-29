@@ -119,3 +119,10 @@ ktlint {
     android.set(true)
     version.set("1.3.1")
 }
+
+// Commit app/gradle.lockfile so osv-scanner (see .github/workflows/security.yml) has a
+// resolved dependency graph to scan. Regenerate after changing dependencies with:
+//   ./gradlew :app:dependencies --write-locks
+dependencyLocking {
+    lockAllConfigurations()
+}
