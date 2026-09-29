@@ -5,7 +5,21 @@
 
 ## Near-term
 
-Empty. The three items tracked as of Session N's handoff (MockWebServer
+- [ ] **Re-justify or drop the 11 `osv-scanner.toml` package overrides
+      before 2026-12-28.** Each entry in the suppression list (added
+      alongside the security workflow — netty, guava, protobuf, commons-io,
+      bouncycastle, logback, all confirmed build/test-tooling-only, none on
+      a shipped classpath) carries `effectiveUntil = 2026-12-28`, matched by
+      exact name+version so a new package or version is never silently
+      covered. When that date arrives, `dependency-scan` starts failing on
+      whichever of the 11 are still present unless someone either re-checks
+      each one is still tooling-only and pushes the expiry out, or the
+      underlying tools (ktlint/AGP/ksp/Robolectric) have been bumped past
+      the flagged versions by then, in which case the override can just be
+      deleted. `.github/CODEOWNERS` now requires @arb-rajab's review on any
+      change to `osv-scanner.toml` itself, so this won't land unreviewed.
+
+The three items tracked as of Session N's handoff (MockWebServer
 integration tests, `QueryScreen` pull-to-refresh, a `FAILED`-result retry
 button) were completed in Session N+1, and — unlike every prior round of
 work on this project — actually confirmed green in CI, not just written and
@@ -13,9 +27,7 @@ hoped for. See `12-session-handoff.md`'s Session N+1 entry for what CI's
 first real end-to-end run surfaced and how each issue was fixed (a wrong
 `PullToRefreshBox` import package, a stray import that shadowed an internal
 Compose symbol, ktlint formatting, and one genuinely wrong Compose-testing
-API reference in code that had never compiled before). Nothing is currently
-tracked as near-term backlog beyond the design gaps and explicitly-out-of-
-scope items below.
+API reference in code that had never compiled before).
 
 ## Admin-only, not actionable by any automated session
 
@@ -25,15 +37,18 @@ scope items below.
       date", administrators not exempt, and status checks `lint-and-test` and
       `instrumented-tests (30)` required. Still to add under Settings →
       Branches → the `main` rule → required status checks (admin-only; no
-      session tooling can read or write this): `Secret scan (gitleaks)`,
+      session tooling can read or write this, even attached with push
+      access — `GET/PATCH .../branches/main/protection` 403s with "Resource
+      not accessible by integration" regardless): `Secret scan (gitleaks)`,
       `CodeQL (java-kotlin)`, `Dependency scan (osv-scanner)` (all from
       `.github/workflows/security.yml`; none are path-filtered). NOTE: the
       required names match the job `name:` values in `android-ci.yml`
       exactly — renaming those jobs un-requires the check and blocks every
       merge until the rule is updated (this happened once while adding the
-      security workflow). Optional hardening discussed but not enabled:
-      required approvals, CODEOWNERS on `.github/workflows/` and
-      `osv-scanner.toml`, code-owner review.
+      security workflow). `.github/CODEOWNERS` (added this session, scoped
+      to `.github/workflows/`, `osv-scanner.toml`, `app/gradle.lockfile`,
+      owner @arb-rajab) is done; required-approvals review is still
+      optional hardening, not enabled.
 
 ## Design gaps acknowledged, not solved
 
