@@ -31,23 +31,24 @@ API reference in code that had never compiled before).
 
 ## Admin-only, not actionable by any automated session
 
-- [ ] **Add the security checks to `main`'s required status checks.**
-      `main` is now protected (set by the repo owner after the Session N+4
-      audit found it unprotected): PR required, "require branches to be up to
-      date", administrators not exempt, and status checks `lint-and-test` and
-      `instrumented-tests (30)` required. Still to add under Settings →
-      Branches → the `main` rule → required status checks (admin-only; no
-      session tooling can read or write this, even attached with push
-      access — `GET/PATCH .../branches/main/protection` 403s with "Resource
-      not accessible by integration" regardless): `Secret scan (gitleaks)`,
-      `CodeQL (java-kotlin)`, `Dependency scan (osv-scanner)` (all from
-      `.github/workflows/security.yml`; none are path-filtered). NOTE: the
-      required names match the job `name:` values in `android-ci.yml`
-      exactly — renaming those jobs un-requires the check and blocks every
-      merge until the rule is updated (this happened once while adding the
-      security workflow). `.github/CODEOWNERS` (added this session, scoped
-      to `.github/workflows/`, `osv-scanner.toml`, `app/gradle.lockfile`,
-      owner @arb-rajab) is done; required-approvals review is still
+- [x] **Add the security checks to `main`'s required status checks.**
+      Done — the repo owner added `Secret scan (gitleaks)`,
+      `CodeQL (java-kotlin)`, and `Dependency scan (osv-scanner)` to the
+      `main` rule's required status checks alongside the existing
+      `lint-and-test` and `instrumented-tests (30)`, confirmed via
+      `GET /repos/arb-rajab/lexicon-android/branches/main`'s
+      `protection.required_status_checks.contexts` listing all five. No
+      session tool could do this directly (confirmed again immediately
+      before: `GET/PATCH .../branches/main/protection` 403s with "Resource
+      not accessible by integration" even when the repo is attached with
+      push access) — it took the owner doing it by hand in Settings →
+      Branches. NOTE for future changes to these jobs: the required names
+      match the job `name:` values in `android-ci.yml`/`security.yml`
+      exactly — renaming a job un-requires its check and blocks every merge
+      until the rule is updated (this happened once already, while adding
+      the security workflow). `.github/CODEOWNERS` (scoped to
+      `.github/workflows/`, `osv-scanner.toml`, `app/gradle.lockfile`,
+      owner @arb-rajab) is also done; required-approvals review is still
       optional hardening, not enabled.
 
 ## Design gaps acknowledged, not solved
