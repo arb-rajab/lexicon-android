@@ -43,14 +43,14 @@ jobs:
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           # See android-ci.yml: the action's default `packages` includes the removed
           # legacy "tools" package.
           packages: "platform-tools"
 
       - name: Gradle cache
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
