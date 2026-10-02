@@ -60,7 +60,7 @@ android {
 }
 
 val composeBomVersion = "2024.09.03"
-val roomVersion = "2.6.1"
+val roomVersion = "2.8.5"
 val retrofitVersion = "3.0.0"
 val workVersion = "2.9.1"
 val coroutinesVersion = "1.9.0"
