@@ -1,0 +1,6 @@
+# Security-relevant CI configuration and the dependency-vuln suppression list
+# need a human in the loop before they change quietly. Scoped narrowly on
+# purpose so ordinary app-code PRs aren't slowed down by this.
+/.github/workflows/  @arb-rajab
+/osv-scanner.toml    @arb-rajab
+/app/gradle.lockfile @arb-rajab
