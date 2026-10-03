@@ -1,9 +1,9 @@
 # osv-scanner policy for app/gradle.lockfile (see .github/workflows/security.yml).
 #
 # Every entry below is a known advisory in a package that lives ONLY in build/test tooling
-# (ktlint, AGP's Unified Test Platform, ksp, Robolectric) and is absent from every
-# release/debug compile+runtime classpath, i.e. it is not in the shipped APK. They are pinned
-# by AGP/ktlint/Robolectric, so they clear when those tools are bumped (Dependabot).
+# (ktlint, AGP's Unified Test Platform and Android Lint tool, ksp, Robolectric) and is absent
+# from every release/debug compile+runtime classpath, i.e. it is not in the shipped APK. They
+# are pinned by AGP/ktlint/Robolectric, so they clear when those tools are bumped (Dependabot).
 # Matching is exact name+version, so a new version or any new package is still reported, and
 # each entry expires so it has to be re-justified rather than silently ignored forever.
 
@@ -94,3 +94,35 @@ ecosystem = "Maven"
 ignore = true
 effectiveUntil = 2026-12-28T00:00:00Z
 reason = "AGP Unified Test Platform (instrumented-test host tooling) only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "org.apache.commons:commons-lang3"
+version = "3.16.0"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP 9 Android Lint tool classpath (androidLintTool configuration) only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "org.apache.httpcomponents:httpclient"
+version = "4.5.6"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP 9 Android Lint tool classpath (androidLintTool configuration) only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "org.bouncycastle:bcpkix-jdk18on"
+version = "1.80.2"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP 9 Android Lint tool classpath (androidLintTool configuration) only; never packaged into the APK."
+
+[[PackageOverrides]]
+name = "org.bouncycastle:bcprov-jdk18on"
+version = "1.80.2"
+ecosystem = "Maven"
+ignore = true
+effectiveUntil = 2026-12-28T00:00:00Z
+reason = "AGP 9 Android Lint tool classpath (androidLintTool configuration) only; never packaged into the APK."
