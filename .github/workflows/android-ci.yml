@@ -37,6 +37,16 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v5
 
+      # TEMPORARY - removed again before this PR merges.
+      - name: Regenerate lockfile (temporary)
+        run: |
+          ./gradlew :app:dependencies --write-locks --no-daemon > /dev/null
+          wc -l app/gradle.lockfile
+          sha256sum app/gradle.lockfile
+          echo "----- BEGIN app/gradle.lockfile -----"
+          cat app/gradle.lockfile
+          echo "----- END app/gradle.lockfile -----"
+
       - name: ktlint
         run: ./gradlew ktlintCheck --no-daemon
 
