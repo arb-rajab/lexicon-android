@@ -71,7 +71,7 @@ val roomVersion = "2.8.5"
 val retrofitVersion = "3.0.0"
 val workVersion = "2.9.1"
 val coroutinesVersion = "1.11.0"
-val serializationVersion = "1.7.3"
+val serializationVersion = "1.11.0"
 
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
