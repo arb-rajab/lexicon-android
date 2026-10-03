@@ -40,6 +40,9 @@ jobs:
       # TEMPORARY - removed again before this PR merges.
       - name: Regenerate lockfile (temporary)
         run: |
+          # Start from an empty lockfile: --write-locks keeps old state for configurations it
+          # does not resolve, which leaves stale entries for configurations AGP 9 renamed.
+          rm -f app/gradle.lockfile
           ./gradlew :app:dependencies --write-locks --no-daemon > /dev/null
           wc -l app/gradle.lockfile
           sha256sum app/gradle.lockfile
