@@ -30,6 +30,13 @@
       them is the owner's call (deliberately not done in the upgrade PR).
       Still used: logback-core 1.3.14 (ktlint), guava 31.1-jre (ksp),
       bcprov-jdk18on 1.78.1 (Robolectric).
+      **Update (2026-10-03, cleanup PR):** the eight dead overrides were
+      deleted at the owner's request after re-checking each against the
+      current `app/gradle.lockfile` (exact name+version absent). **7 remain,
+      all still matched by the lockfile:** logback-core 1.3.14 (`ktlint`),
+      guava 31.1-jre and bcprov-jdk18on 1.78.1 (`debugUnitTest*` classpaths
+      only — guava's reason text said "ksp", corrected), and the four AGP 9
+      `androidLintTool` entries. All 7 still expire 2026-12-28.
 
 The three items tracked as of Session N's handoff (MockWebServer
 integration tests, `QueryScreen` pull-to-refresh, a `FAILED`-result retry
