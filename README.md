@@ -45,7 +45,9 @@ docs/project-memory/  Brief, architecture, data model, decisions, backlog, hando
 
 ## Building
 
-Requires JDK 17+ and the Android SDK (compileSdk 34). This was scaffolded in
+Requires JDK 17+ and the Android SDK (compileSdk 37). Toolchain: Gradle 9.7.1
+(wrapper), Android Gradle plugin 9.4.1 with built-in Kotlin, Kotlin 2.4.20, KSP
+2.3.12, Compose BOM 2026.09.00. This was scaffolded in
 an environment without Android SDK / Google Maven access, so the build has
 **not been compiled locally** in that session — CI (`.github/workflows/android-ci.yml`)
 runs ktlint, unit tests, and `assembleDebug` on every push/PR.

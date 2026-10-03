@@ -1,7 +1,7 @@
 # Backlog
 
 > Project: lexicon-android (public)
-> Last updated: 2026-09-28
+> Last updated: 2026-10-03
 
 ## Near-term
 
@@ -18,6 +18,18 @@
       the flagged versions by then, in which case the override can just be
       deleted. `.github/CODEOWNERS` now requires @arb-rajab's review on any
       change to `osv-scanner.toml` itself, so this won't land unreviewed.
+      **Update (Session N+6, toolchain upgrade):** there are now 15
+      overrides. Four new ones (approved by the owner) cover AGP 9's
+      `androidLintTool` configuration: bcprov-jdk18on and bcpkix-jdk18on
+      1.80.2, commons-lang3 3.16.0, httpclient 4.5.6. **Eight of the
+      original 11 now match nothing** in the regenerated lockfile:
+      protobuf-java 3.22.3, commons-io 2.13.0 and the six netty
+      4.1.93.Final entries all came from AGP 8.7's old
+      `_internal-unified-test-platform-*` configurations, which AGP 9 no
+      longer has. Unused overrides don't fail the scan; whether to delete
+      them is the owner's call (deliberately not done in the upgrade PR).
+      Still used: logback-core 1.3.14 (ktlint), guava 31.1-jre (ksp),
+      bcprov-jdk18on 1.78.1 (Robolectric).
 
 The three items tracked as of Session N's handoff (MockWebServer
 integration tests, `QueryScreen` pull-to-refresh, a `FAILED`-result retry

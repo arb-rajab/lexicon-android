@@ -1,6 +1,7 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
@@ -9,11 +10,14 @@ plugins {
 
 android {
     namespace = "dev.arbrajab.lexiconandroid"
-    compileSdk = 34
+    // Compose 1.12 (BOM 2026.09.00) AARs require compileSdk 37 — also AGP 9.4's maximum.
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "dev.arbrajab.lexiconandroid"
         minSdk = 26
+        // Deliberately not raised with compileSdk: nothing in this upgrade requires it, and it
+        // would opt the app into newer runtime behaviour.
         targetSdk = 34
         versionCode = 1
         versionName = "0.1.0"
@@ -36,11 +40,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs += listOf("-opt-in=androidx.compose.material3.ExperimentalMaterial3Api")
-    }
-
     buildFeatures {
         compose = true
     }
@@ -59,7 +58,15 @@ android {
     }
 }
 
-val composeBomVersion = "2024.09.03"
+// AGP 9 built-in Kotlin: android.kotlinOptions is gone; compiler options live here.
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+        optIn.add("androidx.compose.material3.ExperimentalMaterial3Api")
+    }
+}
+
+val composeBomVersion = "2026.09.00"
 val roomVersion = "2.8.5"
 val retrofitVersion = "3.0.0"
 val workVersion = "2.9.1"

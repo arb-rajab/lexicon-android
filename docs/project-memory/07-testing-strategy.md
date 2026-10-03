@@ -1,7 +1,7 @@
 # Testing Strategy
 
 > Project: lexicon-android (public)
-> Last updated: 2026-09-17
+> Last updated: 2026-10-03
 
 ## What's actually tested, and why
 
@@ -69,6 +69,15 @@ self-hosted or fully-virtualized environment, have that acceleration
 available). Whoever picks this up next should confirm the `instrumented-tests`
 job is actually green on the first real run and fix anything it surfaces —
 same standard as the rest of this project's CI story.
+
+### Toolchain note (Session N+6)
+
+Since the AGP 9.4.1 upgrade, the dependency graph (and lockfile) no longer
+has `releaseUnitTest*` configurations; AGP 9 doesn't set up unit tests
+for the release variant here. CI only ever ran `testDebugUnitTest`, so
+coverage is unchanged. The instrumented job still targets API 30 on
+`ubuntu-latest`; raising compileSdk to 37 (minSdk stays 26) didn't affect it.
+It went green on the first run after the upgrade.
 
 ### What's not tested
 
