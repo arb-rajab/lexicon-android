@@ -70,7 +70,7 @@ val composeBomVersion = "2026.09.00"
 val roomVersion = "2.8.5"
 val retrofitVersion = "3.0.0"
 val workVersion = "2.9.1"
-val coroutinesVersion = "1.9.0"
+val coroutinesVersion = "1.11.0"
 val serializationVersion = "1.7.3"
 
 dependencies {
