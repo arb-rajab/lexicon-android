@@ -3,6 +3,22 @@
 > Project: lexicon-android (public)
 > Last updated: 2026-10-03
 
+## Session N+7 (2026-10-03): Post-upgrade cleanup — dead osv overrides removed, Kotlin plugins grouped in Dependabot
+
+Closes the two follow-ups Session N+6 left for the owner:
+
+- **`osv-scanner.toml`: 15 → 7 overrides.** Deleted the eight entries that
+  no longer match anything in `app/gradle.lockfile` (protobuf-java 3.22.3,
+  commons-io 2.13.0, six netty 4.1.93.Final — all from AGP 8.7's removed
+  unified-test-platform configurations). Each of the 7 kept entries was
+  re-checked against the lockfile and is still present on a tooling-only
+  configuration. Header comment and guava's `reason` updated to match the
+  lockfile (guava 31.1-jre is on `debugUnitTest*` classpaths, not ksp).
+- **`.github/dependabot.yml`: new `kotlin` group** (`org.jetbrains.kotlin.*`
+  plugin ids + `org.jetbrains.kotlin:*` artifacts) so Dependabot bumps the
+  Kotlin Gradle plugins together instead of one at a time (the #15 failure
+  mode). `kotlinx.*` libraries and KSP are deliberately not in the group.
+
 ## Session N+6: Coordinated toolchain upgrade (Gradle 9 / AGP 9 / Kotlin 2.4 / Compose 1.12)
 
 **Why one PR:** Dependabot opened three PRs that each failed on their own
