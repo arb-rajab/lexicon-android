@@ -47,6 +47,11 @@ jobs:
       # job log.
       - name: Dependency insight (temporary)
         run: |
+          encode() {
+            # Percent-encode for a GitHub Actions workflow-command annotation body:
+            # %, CR, LF must be escaped or the command/newlines corrupt the output.
+            sed -z 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g'
+          }
           for cfg in debugCompileClasspath debugRuntimeClasspath; do
             for dep in \
               "org.jetbrains.kotlin:kotlin-stdlib-jdk7" \
@@ -54,8 +59,9 @@ jobs:
               "androidx.annotation:annotation" \
               "androidx.startup:startup-runtime" \
               "com.squareup.okhttp3:okhttp-android"; do
-              echo "===== $cfg :: $dep ====="
-              ./gradlew :app:dependencyInsight --dependency "$dep" --configuration "$cfg" --no-daemon || true
+              out="$(./gradlew :app:dependencyInsight --dependency "$dep" --configuration "$cfg" --no-daemon 2>&1 | grep -v '^Picked up\|^$\|^BUILD SUCCESSFUL\|^[0-9]* actionable task' || true)"
+              encoded="$(printf '%s' "$out" | encode)"
+              echo "::notice title=${cfg} :: ${dep}::${encoded}"
             done
           done
 
