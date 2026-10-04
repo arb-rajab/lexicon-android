@@ -37,6 +37,28 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v6
 
+      # TEMPORARY - removed again before this PR merges. Investigating why
+      # app/gradle.lockfile's OkHttp-5.5.0 regeneration (1c347cc) shows
+      # kotlin-stdlib-jdk7/jdk8 going 1.9.10 -> 1.8.10 on the main app
+      # classpaths, and androidx.annotation / androidx.startup:startup-runtime
+      # resolving to two different versions across classpaths. dl.google.com
+      # and repo.maven.apache.org are both unreachable from the authoring
+      # sandbox, so dependencyInsight is run here instead and read from the
+      # job log.
+      - name: Dependency insight (temporary)
+        run: |
+          for cfg in debugCompileClasspath debugRuntimeClasspath; do
+            for dep in \
+              "org.jetbrains.kotlin:kotlin-stdlib-jdk7" \
+              "org.jetbrains.kotlin:kotlin-stdlib-jdk8" \
+              "androidx.annotation:annotation" \
+              "androidx.startup:startup-runtime" \
+              "com.squareup.okhttp3:okhttp-android"; do
+              echo "===== $cfg :: $dep ====="
+              ./gradlew :app:dependencyInsight --dependency "$dep" --configuration "$cfg" --no-daemon || true
+            done
+          done
+
       - name: ktlint
         run: ./gradlew ktlintCheck --no-daemon
 
