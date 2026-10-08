@@ -16,22 +16,6 @@ effectiveUntil = 2026-12-28T00:00:00Z
 reason = "ktlint tooling only (ktlint Gradle configuration); never packaged into the APK."
 
 [[PackageOverrides]]
-name = "com.google.guava:guava"
-version = "31.1-jre"
-ecosystem = "Maven"
-ignore = true
-effectiveUntil = 2026-12-28T00:00:00Z
-reason = "Unit-test classpaths only (debugUnitTest* configurations); never packaged into the APK."
-
-[[PackageOverrides]]
-name = "org.bouncycastle:bcprov-jdk18on"
-version = "1.78.1"
-ecosystem = "Maven"
-ignore = true
-effectiveUntil = 2026-12-28T00:00:00Z
-reason = "Transitive of Robolectric on the unit-test classpath only; never packaged into the APK."
-
-[[PackageOverrides]]
 name = "org.apache.commons:commons-lang3"
 version = "3.16.0"
 ecosystem = "Maven"
