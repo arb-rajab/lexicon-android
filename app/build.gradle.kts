@@ -113,7 +113,7 @@ dependencies {
     testImplementation("androidx.arch.core:core-testing:2.2.0")
     testImplementation("androidx.room:room-testing:$roomVersion")
     testImplementation("org.robolectric:robolectric:4.17")
-    testImplementation("androidx.test:core:1.6.1")
+    testImplementation("androidx.test:core:1.7.0")
     testImplementation("com.squareup.okhttp3:mockwebserver:5.5.0")
 
     androidTestImplementation(platform("androidx.compose:compose-bom:$composeBomVersion"))
