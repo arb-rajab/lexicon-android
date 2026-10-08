@@ -16,7 +16,7 @@ _Last updated: 2026-10-08. Maintained during the Dependabot clean-up pass; updat
 
 ## Time-limited exemptions
 
-- `osv-scanner.toml`: seven advisories in build/test-only packages (logback-core 1.3.14, guava 31.1-jre, bcprov/bcpkix, commons-lang3, httpclient) that are absent from the shipped APK; each has `effectiveUntil` 2026-12-28 and clears as AGP/ktlint/Robolectric are bumped.
+- `osv-scanner.toml`: five package/version entries in build/test-only packages (logback-core 1.3.14, bcprov 1.80.2, bcpkix 1.80.2, commons-lang3 3.16.0, httpclient 4.5.6) that are absent from the shipped APK; each has `effectiveUntil` 2026-12-28 and clears as AGP/ktlint/Robolectric are bumped. The `guava` 31.1-jre and `bcprov` 1.78.1 entries were removed on 2026-10-08: neither version is in `app/gradle.lockfile` any more (guava is 33.x, bcprov 1.80.2 / 1.85), so they only risked silently waiving those versions if they returned.
 
 ## Notes
 
