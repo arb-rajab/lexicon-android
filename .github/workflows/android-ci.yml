@@ -15,6 +15,7 @@ jobs:
     # contexts, so changing them silently un-requires (and blocks merges on) the check.
     name: lint-and-test
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
@@ -63,6 +64,7 @@ jobs:
     # Must render as "instrumented-tests (30)" — see the note on lint-and-test above.
     name: instrumented-tests (${{ matrix.api-level }})
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     strategy:
       matrix:
         api-level: [30]
