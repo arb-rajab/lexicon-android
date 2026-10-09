@@ -15,7 +15,7 @@ permissions:
 jobs:
   secret-scan:
     name: Secret scan (gitleaks)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
@@ -28,7 +28,7 @@ jobs:
 
   codeql:
     name: CodeQL (java-kotlin)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       security-events: write
@@ -73,7 +73,7 @@ jobs:
 
   dependency-scan:
     name: Dependency scan (osv-scanner)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
