@@ -14,7 +14,7 @@ jobs:
     # Explicit names are load-bearing: main's branch protection requires these exact check
     # contexts, so changing them silently un-requires (and blocks merges on) the check.
     name: lint-and-test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
@@ -55,14 +55,14 @@ jobs:
           retention-days: 7
 
   # Instrumented (on-device) Compose UI tests under app/src/androidTest, run on a
-  # hosted emulator. GitHub-hosted ubuntu-latest runners expose /dev/kvm (hardware
+  # hosted emulator. GitHub-hosted ubuntu-24.04 runners expose /dev/kvm (hardware
   # acceleration) once the udev rule below grants it — see
   # docs/project-memory/07-testing-strategy.md for why this was previously unverified
   # and what confirmed it's viable here.
   instrumented-tests:
     # Must render as "instrumented-tests (30)" — see the note on lint-and-test above.
     name: instrumented-tests (${{ matrix.api-level }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         api-level: [30]
